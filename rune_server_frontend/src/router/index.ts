@@ -54,17 +54,17 @@ const router = createRouter({
           component: () => import('../views/RuneForm.vue'),
         },
 
+        // runeEquipment
+        {
+          path: 'equipped',
+          name: 'Equipped',
+          component: () => import('../views/Equipped.vue'),
+        },
         // optimize
         {
           path: 'optimizer',
           name: 'Optimizer',
           component: () => import('../views/Optimizer.vue'),
-        },
-        // 已装备龙（拆卸符文）
-        {
-          path: 'equipped',
-          name: 'Equipped',
-          component: () => import('../views/Equipped.vue'),
         }
       ]
     }

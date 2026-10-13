@@ -41,13 +41,13 @@ function logout() {
           <el-icon><Collection/></el-icon>
           <span>符文仓库</span>
         </el-menu-item>
+        <el-menu-item index="/equipped">
+          <el-icon><Connection/></el-icon>
+          <span>装备调整</span>
+        </el-menu-item>
         <el-menu-item index="/optimizer">
           <el-icon><MagicStick/></el-icon>
           <span>符文分配器</span>
-        </el-menu-item>
-        <el-menu-item index="/equipped">
-          <el-icon><Connection/></el-icon>
-          <span>已装备龙</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
