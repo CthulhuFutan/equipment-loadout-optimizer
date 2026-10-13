@@ -4,6 +4,7 @@ import {ref} from "vue";
 import {useRouter} from 'vue-router'
 import {ElMessage} from "element-plus";
 import {login, register} from "@/api/auth.ts";
+import {User, Lock} from "@element-plus/icons-vue";
 
 const router = useRouter()
 const isLogin = ref(true);
@@ -36,6 +37,10 @@ async function submitLogin() {
   // res：{code: 401, message: '用户名或密码错误'}
   else if (res.code === 401) {
     ElMessage.error(res.message)
+    return
+  }
+  else{
+    ElMessage.error(res.message || '操作失败')
     return
   }
 }
@@ -73,6 +78,10 @@ async function submitRegister() {
     ElMessage.error(res.message)
     return
   }
+  else{
+    ElMessage.error(res.message || '操作失败')
+    return
+  }
 }
 
 // 切换
@@ -88,8 +97,8 @@ const toggleMode = () => {
       <div class="form-panel">
         <el-form v-show="isLogin" class="form-box" :model="loginForm">
           <h2 class="form-title">登录</h2>
-          <el-input id="loginUsername" v-model="loginForm.username" placeholder="用户名" prefix-icon="User" size="large" class="form-input"/>
-          <el-input id="loginPassword" v-model="loginForm.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" class="form-input" show-password/>
+          <el-input id="loginUsername" v-model="loginForm.username" placeholder="用户名" :prefix-icon="User" size="large" class="form-input"/>
+          <el-input id="loginPassword" v-model="loginForm.password" type="password" placeholder="密码" :prefix-icon="Lock" size="large" class="form-input" show-password/>
           <el-button type="primary" size="large" class="submit-btn" @click="submitLogin">
             登 录
           </el-button>
@@ -97,9 +106,9 @@ const toggleMode = () => {
 
         <el-form v-show="!isLogin" class="form-box" :model="registerForm">
           <h2 class="form-title">注册</h2>
-          <el-input id="registerUsername" v-model="registerForm.username" placeholder="用户名" prefix-icon="User" size="large" class="form-input"/>
-          <el-input id="registerPassword" v-model="registerForm.password" type="password" placeholder="密码" prefix-icon="Lock" size="large" class="form-input" show-password/>
-          <el-input id="registerRepeatPassword" v-model="registerForm.repeatPassword" type="password" placeholder="确认密码" prefix-icon="Lock" size="large" class="form-input" show-password/>
+          <el-input id="registerUsername" v-model="registerForm.username" placeholder="用户名" :prefix-icon="User" size="large" class="form-input"/>
+          <el-input id="registerPassword" v-model="registerForm.password" type="password" placeholder="密码" :prefix-icon="Lock" size="large" class="form-input" show-password/>
+          <el-input id="registerRepeatPassword" v-model="registerForm.repeatPassword" type="password" placeholder="确认密码" :prefix-icon="Lock" size="large" class="form-input" show-password/>
           <el-button type="primary" size="large" class="submit-btn" @click="submitRegister">
             注 册
           </el-button>
