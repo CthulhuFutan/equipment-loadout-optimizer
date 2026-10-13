@@ -1,0 +1,62 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: rune_server_backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/dvm_rune?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      # 图片上限拦截，需大于预设 MAX_FILE_SIZE 避免提前拦截
+      max-file-size: 5MB
+      # 单请求整体上限
+      max-request-size: 5MB
+  # 通过添加include-message和include-binding-errors属性来控制是否返回错误信息
+  web:
+    error:
+      include-message: never
+      include-binding-errors: always
+
+
+mybatis-plus:
+  # 识别main/resources/mapper文件夹中的XML文件
+  mapper-locations: classpath:mapper/*.xml
+  # 指定实体类所在的包
+  type-aliases-package: com.dvm.rune_server_backend.model.entity
+  configuration:
+    # 采用驼峰映射
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      # 主键自增
+      id-type: auto
+#      deleteById的时候可以使用
+#      logic-delete-field: deleted
+#      logic-delete-value: 1
+#      logic-not-delete-value: 0
+
+
+jwt:
+  secret: ${JWT_SECRET:}
+  # 24小时（有效期，毫秒）
+  expiration: 86400000
+
+logging:
+  level:
+    com.dvm: DEBUG
+    org.springframework.security: DEBUG
+  file:
+    name: logs/run.log
+
+ai:
+  provider: deepseek
+  skill-location: classpath:ai/skill.md
+
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  base-url: https://api.deepseek.com
+  model: deepseek-v4-flash
