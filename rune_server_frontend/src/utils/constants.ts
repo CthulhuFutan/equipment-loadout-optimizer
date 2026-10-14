@@ -20,8 +20,8 @@ export const DRAGON_CATEGORIES = [
 
 // 属性
 export const DRAGON_ELEMENTS = [
-    { label: '水', value: '水', image: waterImg },
     { label: '火', value: '火', image: fireImg },
+    { label: '水', value: '水', image: waterImg },
     { label: '地', value: '地', image: earthImg },
     { label: '光', value: '光', image: lightImg },
     { label: '暗', value: '暗', image: darkImg }
@@ -59,6 +59,7 @@ export const RUNE_SLOTS = [
 ] as const
 
 export const RUNE_SET_TYPES = [
+    { label: '活动', value: '活动', image: '/runes/special/01_sword.png' },
     { label: '体力', value: '体力', image: '/runes/normal/01/01_yellow_07.png' },
     { label: '机会', value: '机会', image: '/runes/normal/01/01_purple_07.png' },
     { label: '坚固', value: '坚固', image: '/runes/normal/01/01_orange_07.png' },
@@ -71,7 +72,6 @@ export const RUNE_SET_TYPES = [
     { label: '生存', value: '生存', image: '/runes/normal/01/01_blackwhite_07.png' },
     { label: '决心', value: '决心', image: '/runes/normal/01/01_blackpurple_07.png' },
     { label: '仇恨', value: '仇恨', image: '/runes/normal/01/01_blackgreen_07.png' },
-    { label: '活动', value: '活动', image: '/runes/special/01_sword.png' },
 ] as const
 
 // 与 runes.set_type 对齐。key 顺序为展示顺序。
@@ -118,14 +118,6 @@ export function parseRuneSetReqs(v: unknown): { setType: string; count: number }
         .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
         .map(([setType, count]) => ({ setType, count }))
 }
-
-export const RUNE_QUALITIES = [
-    { label: '灰色', value: '灰色' },
-    { label: '蓝色', value: '蓝色' },
-    { label: '紫色', value: '紫色' },
-    { label: '橙色', value: '橙色' },
-    { label: '活动', value: '活动' },
-] as const
 
 // 符文品质对应的背景渐变（取自 colored 星星：保留原星明暗渐变 + 品质色相/饱和度）
 export const RUNE_QUALITY_COLORS: Record<string, string> = {

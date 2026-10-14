@@ -3,7 +3,7 @@ import {Search, Plus} from "@element-plus/icons-vue";
 import {DRAGON_CATEGORIES, DRAGON_ELEMENTS, getCategoryImage, getElementImage} from "@/utils/constants.ts";
 import {onMounted, ref, watch} from "vue";
 import {useRouter} from 'vue-router'
-import {deleteDragon, getDragons} from "@/api/dragon.ts";
+import {deleteDragon, getDragons, getDragonEquipment} from "@/api/dragon.ts";
 import {ElMessage} from "element-plus";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog.vue";
 
@@ -26,7 +26,7 @@ const elementLabel = (element: string) => DRAGON_ELEMENTS.find(e => e.value === 
 
 /**
  * 通过watch函数实现对搜索内容的监听
- * 调整：只有 element 和 category 发生变化时才触发搜索
+ * 只有 element 和 category 发生变化时才触发 loading 加载动画
  */
 watch([searchName, filterElement, filterCategory], ([newName, newElem, newCat], [oldName, oldElem, oldCat]) => {
   if (newElem !== oldElem || newCat !== oldCat) {
@@ -64,9 +64,19 @@ function goDetail(row: any) {
 const showDeleteDialog = ref(false)
 const delLoading = ref(false)
 const pendingDragon = ref<{ dragonId: number; dragonName: string } | null>(null)
-function remove(dragonId: number, dragonName: string) {
+const lockedCount = ref(0)
+async function remove(dragonId: number, dragonName: string) {
   pendingDragon.value = { dragonId, dragonName }
+  lockedCount.value = 0
   showDeleteDialog.value = true
+  try {
+    const res = await getDragonEquipment(dragonId)
+    // 切龙 → 丢弃过期信息
+    if (pendingDragon.value?.dragonId !== dragonId) return
+    lockedCount.value = ((res.data ?? []) as any[]).filter(r => r.locked).length
+  } catch {
+    // 取不到就退回通用提示，不显示数量
+  }
 }
 
 async function onConfirmDelete() {
@@ -181,6 +191,7 @@ onMounted(() => {
         v-model="showDeleteDialog"
         title="确定删除该角色吗"
         message="此操作不可撤销"
+        :description="lockedCount > 0 ? `将自动解锁 ${lockedCount} 件锁定符文` : ''"
         :loading="delLoading"
         @confirm="onConfirmDelete"
     />
