@@ -3,8 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getRunes, deleteRune } from '@/api/rune'
+import { getRunes, deleteRune, setRuneLock } from '@/api/rune'
 import { RUNE_SET_TYPES, STAT_TYPES, RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
+import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
+import RuneLock from '@/components/equip/RuneLock.vue'
 
 const router = useRouter()
 
@@ -55,6 +57,22 @@ const filteredRunes = computed(() => {
 /** 点击槽位选择器：切换筛选 */
 function clickSlot(n: number) {
   activeSlot.value = activeSlot.value === n ? null : n
+}
+
+// 符文锁定按钮：上锁 ↔ 解锁
+async function onToggleLock() {
+  const r = selectedRune.value
+  if (!r) return
+  const status = !r.locked
+  try {
+    await setRuneLock([r.runeId], status)
+    await fetchAllRunes()
+    // 刷新后重新指向同一件符文，避免面板回到空态
+    selectedRune.value = allRunes.value.find((x: any) => x.runeId === r.runeId) ?? null
+    ElMessage.success(status ? '已锁定' : '已解锁')
+  } catch {
+
+  }
 }
 
 /** 点击符文图标：显示详情 */
@@ -175,6 +193,8 @@ onMounted(() => {
               <div v-else class="rune-item-ph">?</div>
               <img :src="starSrc(rune.starRating)" class="rune-item-star"
                    :class="{ 'is-7star': rune.starRating === 7 }" />
+              <!-- 锁定状态图标：List列表 -->
+              <RuneLockBadge :locked="!!rune.locked" />
             </div>
             <div v-if="filteredRunes.length === 0 && !loading" class="rune-empty">没有匹配的符文</div>
           </div>
@@ -199,6 +219,8 @@ onMounted(() => {
                  :class="{ 'is-slot-1': selectedRune.slotNumber === 1 }" />
             <img :src="starSrc(selectedRune.starRating)" class="detail-rune-star"
                  :class="{ 'is-7star': selectedRune.starRating === 7 }" />
+            <!-- 锁定状态图标 -->
+            <RuneLockBadge :locked="!!selectedRune.locked" base="var(--detail-cell)" />
           </div>
           <div style="font-size:18px;font-weight:bold;margin-top:8px">
             {{ selectedRune.runeName || selectedRune.setType }}{{ selectedRune.slotNumber }}号符文
@@ -252,6 +274,11 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- 符文锁定按钮：符文详情 -->
+        <div class="rlk-row">
+          <RuneLock :locked="!!selectedRune.locked" @toggle="onToggleLock" />
+        </div>
+
         <!-- 套组效果 -->
         <div style="text-align:center;padding-top:16px;border-top:1px solid #ebeef5">
           <div style="font-weight:bold;margin-bottom:4px">
@@ -276,15 +303,17 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 按游戏截图还原符文格：品质渐变（橙/紫/蓝，值在 constants.ts）+ 银白细框 + 可调间隙。
-   四个变量可直接改：--rune-cell 符文格尺寸、--rune-gap 间隙、--rune-border-width 边框粗细、
-   --rune-border 边框颜色 */
+.rlk-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 11px 0 31px;
+}
+
 .rune-grid {
-  --rune-cell: 70px;           /* 符文格最小宽度（改这里调符文大小，高度随宽度等比） */
+  --rune-cell: 70px;              /* 符文格最小宽度 */
   --rune-gap: calc(var(--rune-cell) * 0.0286); /* 符文间距：2px/70 ≈ 0.0286（随格缩放） */
-  --rune-border-width: 2px;    /* 边框粗细：1px 太细、2px 清晰、3px 厚重 */
-  --rune-border: #B08D57;      /* 边框颜色：白底推荐 #C0C4CC（浅）/ #909399（深）；
-                                  游戏近白 #E8ECEF 只在深色背景上可见；棕色可用 #B08D57 */
+  --rune-border-width: 2px;       /* 边框粗细 */
+  --rune-border: #B08D57;         /* 边框颜色：白底推荐 #C0C4CC（浅）/ #909399（深） */
   flex: 1;
   min-height: 78px;
   overflow-y: auto;

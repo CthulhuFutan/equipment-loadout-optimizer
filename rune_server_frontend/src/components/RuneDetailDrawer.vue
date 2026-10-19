@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
+import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -66,6 +67,8 @@ function slotBackground(rune: any): string {
                :class="{ 'is-slot-1': rune.slotNumber === 1 }" />
           <img :src="starSrc(rune.starRating)" class="drawer-rune-star"
                :class="{ 'is-7star': rune.starRating === 7 }" />
+          <!-- 锁定状态图标 -->
+          <RuneLockBadge :locked="!!rune.locked" base="var(--dr-box)" />
         </div>
         <div style="font-size:18px;font-weight:bold;margin-top:8px">
           {{ rune.runeName || rune.setType }}{{ rune.slotNumber }}号符文

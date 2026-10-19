@@ -10,6 +10,7 @@ import {
 import {getDragon, getDragonEquipment} from "@/api/dragon.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
 import RuneDetailDrawer from '@/components/RuneDetailDrawer.vue'
+import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -182,6 +183,8 @@ onMounted(() => {
             <img :src="slotImage(slotRunes[slot], slot)" class="slot-img" />
             <img v-if="slotRunes[slot]" :src="starSrc(slotRunes[slot].starRating)" class="slot-star"
                  :class="{ 'is-7star': slotRunes[slot].starRating === 7 }" />
+            <!-- 锁定状态图标 -->
+            <RuneLockBadge :locked="!!slotRunes[slot]?.locked" base="var(--slot)" />
           </div>
         </div>
       </div>

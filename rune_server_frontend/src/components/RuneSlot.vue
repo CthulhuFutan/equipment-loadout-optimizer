@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS } from '@/utils/constants'
+import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
 
 const props = withDefaults(defineProps<{
   /** 槽位上的符文，null/undefined 表示空槽 */
@@ -73,6 +74,8 @@ const tooltipText = computed(() => {
       <img :src="slotImage(rune, slot)" class="slot-img" />
       <img v-if="rune" :src="starSrc(rune.starRating)" class="slot-star"
            :class="{ 'is-7star': rune.starRating === 7 }" />
+      <!-- 锁定状态图标 -->
+      <RuneLockBadge :locked="!!rune?.locked" base="var(--slot)" />
       <!-- 占龙头像角标（该符文已装备在别的龙身上） -->
       <span v-if="owner" class="owner-badge" :title="`已装备在「${owner.name}」身上`">
         <img v-if="owner.avatar" :src="owner.avatar" />

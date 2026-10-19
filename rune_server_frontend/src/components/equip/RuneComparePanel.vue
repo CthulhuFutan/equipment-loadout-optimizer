@@ -8,6 +8,8 @@ import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
 import type { Rune } from './runeStats'
 import { fmtNum, fmtStat, normalSubStatsOf, extraStatOf, statLabel } from './runeStats'
+import RuneLockBadge from './RuneLockBadge.vue'
+import RuneLock from './RuneLock.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,7 +44,12 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{ (e: 'equip'): void; (e: 'unequip'): void }>()
+const emit = defineEmits<{
+  (e: 'equip'): void
+  (e: 'unequip'): void
+  // 点锁按钮：把要切换的符文 id 传输
+  (e: 'toggle-lock', runeId: number): void
+}>()
 
 const MAX_CELL = 70
 
@@ -151,8 +158,8 @@ function onAct(side: Side) {
           </span>
           <!-- 等级角标 -->
           <span v-if="s.rune.levels != null" class="rlv">+{{ s.rune.levels }}</span>
-          <!-- 锁定图标 -->
-          <img v-if="s.rune.locked" class="rlock" src="/lock.png" alt="" />
+          <!-- 锁定状态图标 -->
+          <RuneLockBadge :locked="!!s.rune.locked" />
         </div>
 
         <div class="cmp-info">
@@ -194,6 +201,10 @@ function onAct(side: Side) {
             <span class="k">—</span><span class="v"></span>
           </div>
 
+          <!-- 符文锁定按钮 -->
+          <div class="lock-row">
+            <RuneLock :locked="!!s.rune.locked" @toggle="emit('toggle-lock', s.rune.runeId)" />
+          </div>
           <div class="set-line">
             <div class="sn">{{ s.rune.setType }} {{ getSetEffect(s.rune.setType).count }}套组</div>
             <div class="sd">{{ getSetEffect(s.rune.setType).desc || '—' }}</div>
@@ -215,6 +226,8 @@ function onAct(side: Side) {
             <div class="stat-group-title">副属性</div>
             <div v-for="i in maxSub" :key="`gs${i}`" class="stat-line"><span class="k">—</span><span class="v"></span></div>
           </div>
+          <!-- 幽灵锁按钮行：与填充卡同高，保证左右两卡的套组效果停在同一高度 -->
+          <div class="lock-row"><RuneLock disabled style="visibility: hidden" /></div>
           <div class="set-line"><div class="sn">无套组</div><div class="sd"></div></div>
         </div>
       </div>
@@ -295,6 +308,7 @@ function onAct(side: Side) {
 /* 详情区符文框 */
 .cmp-rune {
   --detail: v-bind(detailPx);
+  --rlb-base: var(--detail);   /* 锁图标组件以此为准 */
   position: relative;
   width: var(--detail);
   height: var(--detail);
@@ -359,16 +373,7 @@ function onAct(side: Side) {
     var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
     0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
-/* 锁定图标 */
-.cmp-rune .rlock {
-  position: absolute;
-  right: calc(var(--detail) * 0.070);
-  bottom: calc(var(--detail) * 0.240);
-  height: calc(var(--detail) * 0.200);
-  width: auto;
-  z-index: 2;
-  pointer-events: none;
-}
+
 .cmp-rune .rune-owner {
   position: absolute;
   right: 0;
@@ -456,6 +461,14 @@ function onAct(side: Side) {
   visibility: hidden;
 }
 
+/* 锁按钮行：右对齐。42/7/11 按【前端口径】配平（.stat-line 只有 padding 1px 0、无 margin-bottom）；
+   与原型 index.html 的 37/17/11 不同 —— 那边 .stat-line 是 padding 5px 10px + margin-bottom 1px。
+   右 7px = .cmp-info 横向无内边距(0) + 菱形外伸 7px，使右尖端与词条文字右缘对齐。 */
+.lock-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 42px 7px 11px;
+}
 /* 隔线 + 套组块 */
 .set-line {
   margin-top: 32px;

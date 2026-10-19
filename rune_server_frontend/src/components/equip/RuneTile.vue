@@ -3,6 +3,7 @@
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS } from '@/utils/constants'
 import type { Rune } from './runeStats'
+import RuneLockBadge from './RuneLockBadge.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -75,8 +76,8 @@ const starSrc = computed(() =>
       <span v-if="isEquipped && showLevel && rune?.levels != null" class="rt-lv">
         +{{ rune.levels }}
       </span>
-      <!-- 锁定图标 → 之上；与是否被角色装备无关 -->
-      <img v-if="rune?.locked" class="rt-lock" src="/lock.png" alt="" />
+      <!-- 锁定状态图标 -->
+      <RuneLockBadge :locked="!!rune?.locked" />
     </div>
     <slot />
   </div>
@@ -160,16 +161,6 @@ const starSrc = computed(() =>
     0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
 
-/* ---- 锁定图标：右下角 ---- */
-.rt-lock {
-  position: absolute;
-  right: calc(var(--rune-cell, 70px) * 0.070);
-  bottom: calc(var(--rune-cell, 70px) * 0.240);
-  height: calc(var(--rune-cell, 70px) * 0.200);
-  width: auto;
-  z-index: 2;
-  pointer-events: none;
-}
 
 /* ---- 符文装备对应龙头像：尖角矩形、紧贴右上边缘 ---- */
 .rt-owner {

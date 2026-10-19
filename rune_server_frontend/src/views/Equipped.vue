@@ -11,7 +11,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDragons, saveDragonEquipment } from '@/api/dragon'
-import { getRunes } from '@/api/rune'
+import { getRunes, setRuneLock } from '@/api/rune'
 import { RUNE_SET_TYPES, STAT_TYPES } from '@/utils/constants'
 import RuneTile from '@/components/equip/RuneTile.vue'
 import RuneComparePanel from '@/components/equip/RuneComparePanel.vue'
@@ -235,6 +235,20 @@ async function unequip() {
   }
 }
 
+// 符文锁定按钮：上锁 ↔ 解锁
+async function toggleLock(runeId: number) {
+  const r = runeMap.value.get(runeId)
+  if (!r) return
+  const status = !r.locked
+  try {
+    await setRuneLock([runeId], status)
+    await reloadRunes()
+    ElMessage.success(status ? '已锁定' : '已解锁')
+  } catch {
+
+  }
+}
+
 const pickerVisible = ref(false)
 
 function selectDragon(id: number) {
@@ -392,6 +406,7 @@ onMounted(load)
           :max-sub="maxSub"
           @equip="equip"
           @unequip="unequip"
+          @toggle-lock="toggleLock"
         />
       </div>
 
