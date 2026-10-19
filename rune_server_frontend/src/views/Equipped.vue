@@ -25,7 +25,6 @@ import {
   indexRunes,
   loadoutRunes,
   setDelta,
-  sortCandidates,
   statDelta,
   statLabel,
   fmtStat,
@@ -101,21 +100,11 @@ function runeMatches(r: Rune): boolean {
 }
 
 /**
- * 候选池：当前槽位 + 通过筛选。
- *
- * TODO（后端排序上线后，只改这一处）——
- *   目前后端 `/runes` 是裸 `selectList`，**没有任何 ORDER BY**，返回顺序未定义；
- *   所以顺序完全由 `sortCandidates` 决定（品质 → 星级 → 主属性值 → runeId，
- *   四层比较以唯一的 runeId 收尾 = 全序，结果确定、不会随返回顺序跳动）。
- *   等后端加上 order / quality_rank 排序后：
- *     · 后端规则与上面一致 → 可原样保留（结果相同）
- *     · 后端引入**人工 order**（例如让同套组聚集）→ **删掉下面的 sortCandidates 调用**，
- *       直接信任后端顺序，否则会把后端的 order 丢掉
- *   ⚠️ 同时必须确认 `/runes` 仍然**不分页** —— 一旦分页，前端排序只作用于当前页，会失效。
- *   详见设计文档《装备工作台-设计方案.md》§十四。
+ * 候选池：当前槽位 + 通过筛选
+ * 采用后端 ENUM 预定顺序进行展示
  */
 const candidatePool = computed(() =>
-  sortCandidates(runes.value.filter((r) => r.slotNumber === curSlot.value && runeMatches(r))),
+  runes.value.filter((r) => r.slotNumber === curSlot.value && runeMatches(r)),
 )
 const candidateRune = computed<Rune | null>(() =>
   candidateId.value == null ? null : (runeMap.value.get(candidateId.value) ?? null),
@@ -209,34 +198,41 @@ async function load() {
  */
 async function submit(next: Loadout) {
   const dragonId = curDragonId.value
-  if (dragonId == null || saving.value) return
+  if (dragonId == null || saving.value) return false
   saving.value = true
   try {
     const ids = Object.values(next).filter((v): v is number => v != null)
     await saveDragonEquipment(dragonId, ids)
     await reloadRunes()
+    return true
   } catch {
     await reloadRunes()
+    return false
   } finally {
     saving.value = false
   }
 }
 
-function equip() {
+async function equip() {
   const cand = candidateRune.value
   if (!cand) return
-  ElMessage.success(`已装备：${cand.runeName || cand.setType}${cand.slotNumber}号符文 → ${curSlot.value} 号槽`)
-  void submit({ ...curLoadout.value, [curSlot.value]: cand.runeId })
+  const slot = curSlot.value
+  const ok = await submit({ ...curLoadout.value, [slot]: cand.runeId })
+  if (ok) {
+    ElMessage.success(`已装备：${cand.runeName || cand.setType}${cand.slotNumber}号符文 → ${slot} 号槽`)
+  }
 }
 
-function unequip() {
+async function unequip() {
   const r = equippedRune.value
   if (!r) return
   const next: Loadout = { ...curLoadout.value }
   delete next[curSlot.value]
-  ElMessage.success(`已卸下：${r.runeName || r.setType}${r.slotNumber}号符文`)
-  // 卸下后保留用户当前选中的候选：下面 ensureCandidate 只在候选为空/失效时才落回第一件
-  void submit(next).then(ensureCandidate)
+  const ok = await submit(next)
+  ensureCandidate()
+  if (ok) {
+    ElMessage.success(`已卸下：${r.runeName || r.setType}${r.slotNumber}号符文`)
+  }
 }
 
 const pickerVisible = ref(false)
@@ -267,7 +263,7 @@ onMounted(load)
 </script>
 
 <template>
-  <div v-loading="loading" class="equip-page">
+  <div v-loading="loading || saving" class="equip-page">
     <div class="page-head">
       <h2>装备调整</h2>
     </div>
@@ -316,7 +312,6 @@ onMounted(load)
             <RuneTile
               :rune="runeMap.get(equippedIdAt(curLoadout, n) ?? -1) ?? null"
               :slot="n"
-              :show-level="false"
             />
             <span class="sc-count" :class="{ zero: filtering && !slotCounts[i] }">
               {{ slotCounts[i] ?? 0 }}

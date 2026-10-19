@@ -89,8 +89,8 @@ const isPlaceholder = computed(() => props.placeholderTitle != null)
             <div v-for="s in stats" :key="s.label" class="sum-item">
               <span>{{ s.label }}</span>
               <span class="v">
-                {{ fmtNum(s.total) }}
-                <em v-if="s.setBonus">（含套组 {{ fmtNum(s.setBonus) }}）</em>
+                +{{ fmtNum(s.total) }}{{ s.isPercent ? '%' : '' }}
+                <em v-if="s.setBonus">（{{ fmtNum(s.base) }}{{ s.isPercent ? '%' : '' }} + 套装效果 {{ fmtNum(s.setBonus) }}{{ s.isPercent ? '%' : '' }}）</em>
               </span>
             </div>
           </div>

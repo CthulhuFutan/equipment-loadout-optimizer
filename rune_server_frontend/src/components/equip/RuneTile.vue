@@ -17,7 +17,7 @@ const props = withDefaults(
     // 该符文处于装备状态时，右上角挂装备它的龙头像（本龙装备也会挂）
     ownerImage?: string | null
     ownerName?: string | null
-    // 是否属于「别的龙」—— 仅影响提示语里要不要提"会被自动拆下"
+    // 是否属别的龙 → 影响提示语"会被自动拆下"
     ownerStealable?: boolean
   }>(),
   {
@@ -71,10 +71,12 @@ const starSrc = computed(() =>
         <img v-if="ownerImage" :src="ownerImage" alt="" />
         <span v-else class="rt-owner-ph">{{ ownerName.slice(0, 1) }}</span>
       </span>
-      <!-- 等级角标：位于符文图片之后 → 之上 -->
+      <!-- 等级角标：位于符文图片之后（前端页面显示为在符文图片之上） -->
       <span v-if="isEquipped && showLevel && rune?.levels != null" class="rt-lv">
         +{{ rune.levels }}
       </span>
+      <!-- 锁定图标 → 之上；与是否被角色装备无关 -->
+      <img v-if="rune?.locked" class="rt-lock" src="/lock.png" alt="" />
     </div>
     <slot />
   </div>
@@ -141,7 +143,7 @@ const starSrc = computed(() =>
 .rt-lv {
   position: absolute;
   left: calc(var(--rune-cell, 70px) * 0.05);
-  bottom: calc(var(--rune-cell, 70px) * 0.193);
+  bottom: calc(var(--rune-cell, 70px) * 0.210);   /* 2026-10-14 定稿：原 0.193 */
   z-index: 2;
   font-size: calc(var(--rune-cell, 70px) * 0.2);
   line-height: calc(var(--rune-cell, 70px) * 0.24);
@@ -156,6 +158,17 @@ const starSrc = computed(() =>
     calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
     var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
     0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
+}
+
+/* ---- 锁定图标：右下角 ---- */
+.rt-lock {
+  position: absolute;
+  right: calc(var(--rune-cell, 70px) * 0.070);
+  bottom: calc(var(--rune-cell, 70px) * 0.240);
+  height: calc(var(--rune-cell, 70px) * 0.200);
+  width: auto;
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* ---- 符文装备对应龙头像：尖角矩形、紧贴右上边缘 ---- */

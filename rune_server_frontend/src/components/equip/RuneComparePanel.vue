@@ -151,6 +151,8 @@ function onAct(side: Side) {
           </span>
           <!-- 等级角标 -->
           <span v-if="s.rune.levels != null" class="rlv">+{{ s.rune.levels }}</span>
+          <!-- 锁定图标 -->
+          <img v-if="s.rune.locked" class="rlock" src="/lock.png" alt="" />
         </div>
 
         <div class="cmp-info">
@@ -341,7 +343,7 @@ function onAct(side: Side) {
 .cmp-rune .rlv {
   position: absolute;
   left: calc(var(--detail) * 0.05);
-  bottom: calc(var(--detail) * 0.193);
+  bottom: calc(var(--detail) * 0.210);   /* 2026-10-14 定稿：原 0.193 */
   z-index: 2;
   font-size: calc(var(--detail) * 0.2);
   line-height: calc(var(--detail) * 0.24);
@@ -356,6 +358,16 @@ function onAct(side: Side) {
     calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
     var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
     0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
+}
+/* 锁定图标 */
+.cmp-rune .rlock {
+  position: absolute;
+  right: calc(var(--detail) * 0.070);
+  bottom: calc(var(--detail) * 0.240);
+  height: calc(var(--detail) * 0.200);
+  width: auto;
+  z-index: 2;
+  pointer-events: none;
 }
 .cmp-rune .rune-owner {
   position: absolute;

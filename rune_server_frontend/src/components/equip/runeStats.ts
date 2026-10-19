@@ -23,6 +23,7 @@ export interface Rune {
   grindSortOrder?: number | null
   equipped?: boolean
   equippedDragonId?: number | null
+  locked?: boolean
 }
 
 // 龙相关使用字段
@@ -38,14 +39,6 @@ export interface Dragon {
 export type Loadout = Record<number, number>
 // 龙 ID → Loadout
 export type LoadoutMap = Record<number, Loadout>
-
-// 品质排序权重
-export const QUALITY_RANK: Record<string, number> = {
-  橙色: 4,
-  紫色: 3,
-  蓝色: 2,
-  灰色: 1,
-}
 
 // 参与 “属性总和” 的数值套组
 export const SET_BONUS: Record<string, { stat: string; value: number }> = {
@@ -272,15 +265,4 @@ export function setDelta(before: Rune[], after: Rune[]): SetDeltaRow[] {
     })
     .filter((r): r is SetDeltaRow => !!r)
     .sort((a, b) => b.to - a.to)
-}
-
-// 候选排序：品质 → 星级 → 主属性数值 → ID
-export function sortCandidates(list: Rune[]): Rune[] {
-  return [...list].sort(
-    (a, b) =>
-      (QUALITY_RANK[b.quality] ?? 0) - (QUALITY_RANK[a.quality] ?? 0) ||
-      b.starRating - a.starRating ||
-      (Number(b.mainStatValue) || 0) - (Number(a.mainStatValue) || 0) ||
-      a.runeId - b.runeId,
-  )
 }

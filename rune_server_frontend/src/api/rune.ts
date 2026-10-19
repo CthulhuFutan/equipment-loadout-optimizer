@@ -15,3 +15,7 @@ export function createRune(data: any) {
 export function deleteRune(id: number) {
     return api.delete(`/runes/${id}`)
 }
+
+export function setRuneLock(runeIds: number[], locked: boolean) {
+    return api.put('/runes/lock', { runeIds, locked })
+}
