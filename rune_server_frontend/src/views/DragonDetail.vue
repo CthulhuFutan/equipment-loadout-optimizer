@@ -4,13 +4,12 @@ import {useRoute, useRouter} from 'vue-router'
 import {ArrowLeft, Loading} from '@element-plus/icons-vue'
 import {
   DRAGON_CATEGORIES, DRAGON_ELEMENTS,
-  getCategoryImage, getElementImage,
-  RUNE_QUALITY_COLORS
+  getCategoryImage, getElementImage
 } from '@/utils/constants.ts'
 import {getDragon, getDragonEquipment} from "@/api/dragon.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
 import RuneDetailDrawer from '@/components/rune/RuneDetailDrawer.vue'
-import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
+import RuneVisual from '@/components/rune/RuneVisual.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -97,15 +96,6 @@ const slotRunes = computed(() => {
   return map
 })
 
-function slotBackground(rune: any): string {
-  if (!rune) return '#2a1b10'
-  return RUNE_QUALITY_COLORS[rune.quality] ?? 'linear-gradient(180deg, #969696 0%, #303030 100%)'
-}
-
-function slotImage(rune: any, slot: number): string {
-  return rune?.imageUrl || `/runes/slot/rune_slot_010${slot}.png`
-}
-
 // drawer符文详情
 function openDrawer(rune: any) {
   selectedRune.value = rune
@@ -119,10 +109,6 @@ async function goOptimize() {
     { confirmButtonText: '是', cancelButtonText: '否', type: 'warning' }
   )
   router.push({ path: '/optimizer', query: { dragonId } })
-}
-
-function starSrc(starRating: number): string {
-  return `/runes/star/rune_star_0${starRating}.png`
 }
 
 async function fetchEquipment() {
@@ -172,21 +158,10 @@ onMounted(() => {
         <div class="slot-grid">
           <div v-for="slot in 6" :key="slot"
                class="rune-slot"
-               :class="{ 'is-empty': !slotRunes[slot], 'is-slot-1': slot === 1 }"
-               :style="{ background: slotBackground(slotRunes[slot]) }"
+               :class="{ 'is-empty': !slotRunes[slot] }"
                :title="slotRunes[slot] ? `${slotRunes[slot].runeName || slotRunes[slot].setType}${slot}号符文` : `${slot}号槽位（空）`"
                @click="slotRunes[slot] && openDrawer(slotRunes[slot])">
-            <span class="corner tl"></span>
-            <span class="corner tr"></span>
-            <span class="corner bl"></span>
-            <span class="corner br"></span>
-            <img :src="slotImage(slotRunes[slot], slot)" class="slot-img" />
-            <img v-if="slotRunes[slot]" :src="starSrc(slotRunes[slot].starRating)" class="slot-star"
-                 :class="{ 'is-7star': slotRunes[slot].starRating === 7 }" />
-            <!-- 等级数字 -->
-            <span v-if="slotRunes[slot] && slotRunes[slot].levels != null" class="slot-lv">+{{ slotRunes[slot].levels }}</span>
-            <!-- 锁定状态图标 -->
-            <RuneLockIcon :locked="!!slotRunes[slot]?.locked" base="var(--slot)" />
+            <RuneVisual :rune="slotRunes[slot]" :slot="slot" :size="65" corners style="--rv-corner: 7px" />
           </div>
         </div>
       </div>
@@ -403,7 +378,6 @@ onMounted(() => {
   --slot: 65px;
   --gap-x: 3px;
   --gap-y: 3px;
-  --corner-size: 7px;
 }
 
 .slot-grid {
@@ -415,90 +389,10 @@ onMounted(() => {
 }
 .rune-slot {
   position: relative;
-  width: var(--slot);
-  height: var(--slot);
-  border-radius: 0;
-  border: 2px solid #C0C4CC;
   cursor: pointer;
-  box-sizing: border-box;
   transition: transform .1s;
 }
 .rune-slot:hover { transform: scale(1.06); }
 .rune-slot.is-empty { cursor: default; }
 .rune-slot.is-empty:hover { transform: none; }
-
-.rune-slot:not(.is-empty) .slot-img {
-  position: absolute;
-  left: 50%;
-  top: 43%;
-  transform: translate(-50%, -50%);
-  width: calc(var(--slot) * 0.925);
-  height: calc(var(--slot) * 0.925);
-  object-fit: contain;
-  pointer-events: none;
-}
-/* 1号符文：原图在画布内偏高约7%，需要向下移动对齐 */
-.rune-slot.is-slot-1:not(.is-empty) .slot-img {
-  top: 50%;
-}
-.rune-slot.is-empty .slot-img {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(var(--slot));
-  height: calc(var(--slot));
-  object-fit: contain;
-  pointer-events: none;
-}
-.rune-slot:not(.is-empty) .slot-star {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  /* 统一到 Equipped（EquipRuneCell .rt-star）基准 */
-  bottom: calc(var(--slot) * 0.02);
-  height: calc(var(--slot) * 0.26);
-  max-width: calc(var(--slot) * 0.88);
-  object-fit: contain;
-  pointer-events: none;
-}
-.rune-slot:not(.is-empty) .slot-star.is-7star {
-  bottom: calc(var(--slot) * 0.04);
-}
-
-/* 等级数字 +N */
-.slot-lv {
-  --star-h: calc(var(--slot) * 0.26);
-  position: absolute;
-  left: calc(var(--star-h) * 0.3297);
-  bottom: calc(var(--star-h) * 0.808);
-  z-index: 2;
-  font-size: calc(var(--star-h) * 0.769);
-  line-height: calc(var(--star-h) * 0.923);
-  font-weight: 500;
-  color: #fff;
-  pointer-events: none;
-  --lv-o: calc(var(--star-h) * 0.055);
-  --lv-s: calc(var(--star-h) * 0.115);
-  text-shadow:
-    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
-}
-
-.rune-slot .corner {
-  position: absolute;
-  width: var(--corner-size);
-  height: var(--corner-size);
-  background: #c9a05a;
-  display: none;
-}
-.rune-slot.is-empty .corner { display: block; }
-.corner.tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
-.corner.tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
-.corner.bl { bottom: 0; left: 0; clip-path: polygon(0 0, 0 100%, 100% 100%); }
-.corner.br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-
 </style>

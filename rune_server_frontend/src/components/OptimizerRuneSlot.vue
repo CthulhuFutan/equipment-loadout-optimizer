@@ -1,14 +1,11 @@
 <!--
   共享符文槽组件：单槽显示
    - 空槽：深色底 + 金色角标 + 槽位占位图
-   - 装备：按品质渐变底色 + 符文图 + 星级（星级溢出槽位下方）
-   - 悬停 tooltip 显示符文名；点击 emit('click') 交给父级（打开详情抽屉）
-  尺寸通过 size 切换：md=65px（默认）/ lg=84px
+   - 装备：按品质渐变底色 + 符文图 + 星级
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RUNE_QUALITY_COLORS } from '@/utils/constants'
-import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
+import RuneVisual from '@/components/rune/RuneVisual.vue'
 
 const props = withDefaults(defineProps<{
   /** 槽位上的符文，null/undefined 表示空槽 */
@@ -17,7 +14,7 @@ const props = withDefaults(defineProps<{
   slot: number
   /** 尺寸：md=65px 槽位（默认）；lg=84px 大槽位 */
   size?: 'md' | 'lg'
-  /** 左下角角标：该符文已装备在别的龙身上，展示占用龙头像与名字 */
+  /** 右上角角标：该符文已装备在别的龙身上，展示占用龙头像与名字 */
   owner?: { name: string; avatar: string | null } | null
 }>(), {
   size: 'md',
@@ -26,23 +23,6 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{ (e: 'click'): void }>()
 
-// 不同尺寸对应的槽位边长（符文图 / 星星比例见下方 .slot-img / .slot-star，随 --slot 缩放）
-const slotVars = computed<Record<string, string>>(() =>
-  props.size === 'lg'
-    ? { '--slot': '84px' }
-    : { '--slot': '65px' }
-)
-
-function slotBackground(rune: any): string {
-  if (!rune) return '#2a1b10'
-  return RUNE_QUALITY_COLORS[rune.quality] ?? 'linear-gradient(180deg, #969696 0%, #303030 100%)'
-}
-function slotImage(rune: any, slot: number): string {
-  return rune?.imageUrl || `/runes/slot/rune_slot_010${slot}.png`
-}
-function starSrc(starRating: number): string {
-  return `/runes/star/rune_star_0${starRating}.png`
-}
 
 const tooltipText = computed(() => {
   if (!props.rune) return `${props.slot}号槽位（空）`
@@ -58,31 +38,8 @@ const tooltipText = computed(() => {
     <template #content>
       <div>{{ tooltipText }}</div>
     </template>
-    <div
-      class="rune-slot"
-      :class="{ 'is-empty': !rune, 'is-lg': size === 'lg', 'is-slot-1': slot === 1 }"
-      :style="{
-        ...slotVars,
-        background: slotBackground(rune),
-      }"
-      @click="emit('click')"
-    >
-      <span class="corner tl" />
-      <span class="corner tr" />
-      <span class="corner bl" />
-      <span class="corner br" />
-      <img :src="slotImage(rune, slot)" class="slot-img" />
-      <img v-if="rune" :src="starSrc(rune.starRating)" class="slot-star"
-           :class="{ 'is-7star': rune.starRating === 7 }" />
-      <!-- 等级数字 -->
-      <span v-if="rune && rune.levels != null" class="slot-lv" :class="{ 'has-owner': !!owner }">+{{ rune.levels }}</span>
-      <!-- 锁定状态图标 -->
-      <RuneLockIcon :locked="!!rune?.locked" base="var(--slot)" />
-      <!-- 占龙头像角标（该符文已装备在别的龙身上） -->
-      <span v-if="owner" class="owner-badge" :title="`已装备在「${owner.name}」身上`">
-        <img v-if="owner.avatar" :src="owner.avatar" />
-        <span v-else class="owner-ph">{{ owner.name.slice(0, 1) }}</span>
-      </span>
+    <div class="rune-slot" :class="{ 'is-empty': !rune }" @click="emit('click')">
+      <RuneVisual :rune="rune" :slot="slot" :size="size === 'lg' ? 84 : 65" corners :owner="owner" />
     </div>
   </el-tooltip>
 </template>
@@ -90,126 +47,11 @@ const tooltipText = computed(() => {
 <style scoped>
 .rune-slot {
   position: relative;
-  width: var(--slot);
-  height: var(--slot);
-  border-radius: 0; /* 尖角方形符文框（对齐游戏）；owner-badge 角标仍保留圆角 */
-  border: 2px solid #C0C4CC; /* 边框与 RuneList 符文格一致（--rune-border 2px） */
   cursor: pointer;
-  box-sizing: border-box;
   transition: transform .1s;
 }
 .rune-slot:hover { transform: scale(1.06); }
 .rune-slot.is-empty { cursor: default; }
 .rune-slot.is-empty:hover { transform: none; }
 
-/* 符文图：对齐 DragonDetail 槽内样式——img 居中 + top 43%（图案中心偏上），
-   img = 槽宽 × 0.925（图案在源图内约占 50%，自然显示为槽宽一半略小） */
-.slot-img {
-  position: absolute;
-  left: 50%;
-  top: 43%;
-  transform: translate(-50%, -50%);
-  width: calc(var(--slot) * 0.925);
-  height: calc(var(--slot) * 0.925);
-  object-fit: contain;
-  pointer-events: none;
-}
-.rune-slot.is-empty .slot-img {
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(var(--slot) * 0.925);
-  height: calc(var(--slot) * 0.925);
-}
-/* 1号三角形符文：原图图案在画布内偏高约7%（43% + 7% = 50%），下移对齐 */
-.rune-slot.is-slot-1:not(.is-empty) .slot-img {
-  top: 50%;
-}
-
-/* 星级：统一到 Equipped（EquipRuneCell .rt-star）基准 */
-.slot-star {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--slot) * 0.02);
-  height: calc(var(--slot) * 0.26);
-  max-width: calc(var(--slot) * 0.88);
-  object-fit: contain;
-  pointer-events: none;
-}
-/* 7星星星：单独抬升 */
-.rune-slot:not(.is-empty) .slot-star.is-7star {
-  bottom: calc(var(--slot) * 0.04);
-}
-
-/* 等级数字 +N */
-.slot-lv {
-  --star-h: calc(var(--slot) * 0.26);
-  position: absolute;
-  left: calc(var(--star-h) * 0.3297);   /* = 0.0857 x 格宽（0.05 + 2.5/70），与 Equipped / 对比栏一致 */
-  bottom: calc(var(--star-h) * 0.808);
-  z-index: 2;
-  font-size: calc(var(--star-h) * 0.769);
-  line-height: calc(var(--star-h) * 0.923);
-  font-weight: 500;
-  color: #fff;
-  pointer-events: none;
-  --lv-o: calc(var(--star-h) * 0.055);
-  --lv-s: calc(var(--star-h) * 0.115);
-  text-shadow:
-    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
-}
-/* 有占龙头像时整体上移 */
-.slot-lv.has-owner {
-  bottom: calc(var(--star-h) * 0.808 + 20px);
-}
-
-/* 占龙头像角标：左下角圆角方形小头像 */
-.owner-badge {
-  position: absolute;
-  left: 1px;
-  bottom: 1px;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid #fff;
-  box-shadow: 0 0 3px rgba(0, 0, 0, .35);
-  background: #f5f7fa;
-  pointer-events: none;
-}
-.owner-badge img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.owner-ph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 10px;
-  color: #fff;
-  background: #409eff;
-}
-
-/* 角三角形：默认隐藏，空槽时显示 */
-.rune-slot .corner {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: #c9a05a;
-  display: none;
-}
-.rune-slot.is-empty .corner { display: block; }
-.corner.tl { top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
-.corner.tr { top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
-.corner.bl { bottom: 0; left: 0; clip-path: polygon(0 0, 0 100%, 100% 100%); }
-.corner.br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 </style>

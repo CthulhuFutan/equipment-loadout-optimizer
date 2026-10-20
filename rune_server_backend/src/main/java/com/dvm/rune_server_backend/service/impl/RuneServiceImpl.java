@@ -45,6 +45,7 @@ public class RuneServiceImpl implements RuneService {
                 .orderByAsc("set_type")
                 .orderByDesc("star_rating")
                 .orderByAsc("quality")
+                .orderByAsc("slot_number")
                 .orderByDesc("main_stat_type")
                 .orderByAsc("rune_id");
         List<Runes> runeList = runeMapper.selectList(wrapper);

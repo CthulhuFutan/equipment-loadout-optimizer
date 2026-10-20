@@ -693,7 +693,7 @@ onMounted(load)
   width: 100%;
   min-width: 0;
 }
-.rune-cell:hover :deep(.rt-icon) {
+.rune-cell:hover :deep(.rv-frame) {
   outline: 2px solid #a0cfff;
   outline-offset: -2px;
 }

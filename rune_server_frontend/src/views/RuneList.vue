@@ -4,9 +4,9 @@ import { useRouter } from 'vue-router'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRunes, deleteRune, setRuneLock } from '@/api/rune'
-import { RUNE_SET_TYPES, STAT_TYPES, RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
-import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
+import { RUNE_SET_TYPES, STAT_TYPES, getSetEffect } from '@/utils/constants'
 import RuneLockChange from '@/components/rune/RuneLockChange.vue'
+import RuneVisual from '@/components/rune/RuneVisual.vue'
 
 const router = useRouter()
 
@@ -108,16 +108,6 @@ function isGroundStat(sub: any): boolean {
       && sub.sortOrder === selectedRune.value.grindSortOrder
 }
 
-/** 星级图路径（star/ 原生星图） */
-function starSrc(starRating: number): string {
-  return `/runes/star/rune_star_0${starRating}.png`
-}
-
-/** 槽位背景：按品质返回底色渐变（与 RuneSlot / DragonDetail 同源） */
-function slotBackground(rune: any): string {
-  return RUNE_QUALITY_COLORS[rune.quality] ?? 'linear-gradient(180deg, #969696 0%, #303030 100%)'
-}
-
 /** 删除当前选中的符文 */
 async function removeRune() {
   if (!selectedRune.value) return
@@ -181,22 +171,13 @@ onMounted(() => {
               </el-button>
             </div>
 
-            <!-- 符文图标（方形网格：品质背景 + 符文 + 星星，黑色分隔线） -->
+            <!-- 符文格网格，每格由 RuneVisual fluid 渲染：品质底 + 图 + 星条 + 等级 + 锁 -->
             <div v-loading="loading" class="rune-grid">
             <div v-for="rune in filteredRunes" :key="rune.runeId"
                  class="rune-item"
                  :class="{ selected: selectedRune?.runeId === rune.runeId }"
-                 :style="{ background: slotBackground(rune) }"
                  @click="clickRune(rune)">
-              <img v-if="rune.imageUrl" :src="rune.imageUrl" class="rune-item-img"
-                   :class="{ 'is-slot-1': rune.slotNumber === 1 }" />
-              <div v-else class="rune-item-ph">?</div>
-              <img :src="starSrc(rune.starRating)" class="rune-item-star"
-                   :class="{ 'is-7star': rune.starRating === 7 }" />
-              <!-- 等级数字 -->
-              <span v-if="rune.levels != null" class="rune-item-lv">+{{ rune.levels }}</span>
-              <!-- 锁定状态图标：List列表 -->
-              <RuneLockIcon :locked="!!rune.locked" />
+              <RuneVisual fluid :rune="rune" :slot="rune.slotNumber" />
             </div>
             <div v-if="filteredRunes.length === 0 && !loading" class="rune-empty">没有匹配的符文</div>
           </div>
@@ -214,23 +195,9 @@ onMounted(() => {
       <template v-else>
         <!-- 符文外观：品质渐变背景框（框住符文图 + 星星，样式对齐符文格） -->
         <div style="text-align:center;margin-bottom:20px">
-          <div class="detail-rune-box" :style="{ background: slotBackground(selectedRune) }">
-            <img v-if="selectedRune.imageUrl" :src="selectedRune.imageUrl" class="detail-rune-img"
-                 :class="{ 'is-slot-1': selectedRune.slotNumber === 1 }" />
-            <img v-else :src="`/runes/slot/rune_slot_010${selectedRune.slotNumber}.png`" class="detail-rune-img"
-                 :class="{ 'is-slot-1': selectedRune.slotNumber === 1 }" />
-            <img :src="starSrc(selectedRune.starRating)" class="detail-rune-star"
-                 :class="{ 'is-7star': selectedRune.starRating === 7 }" />
-            <!-- 等级数字 -->
-            <span v-if="selectedRune.levels != null" class="detail-rune-lv">+{{ selectedRune.levels }}</span>
-            <!-- 锁定状态图标 -->
-            <RuneLockIcon :locked="!!selectedRune.locked" base="var(--detail-cell)" />
-          </div>
+          <RuneVisual :rune="selectedRune" :slot="selectedRune.slotNumber" :size="110" />
           <div style="font-size:18px;font-weight:bold;margin-top:8px">
             {{ selectedRune.runeName || selectedRune.setType }}{{ selectedRune.slotNumber }}号符文
-          </div>
-          <div style="color:#909399;font-size:13px">
-            <span v-if="selectedRune.levels != null">等级 +{{ selectedRune.levels }}</span>
           </div>
         </div>
 
@@ -315,9 +282,8 @@ onMounted(() => {
 
 .rune-grid {
   --rune-cell: 70px;              /* 符文格最小宽度 */
-  --rune-gap: calc(var(--rune-cell) * 0.0286); /* 符文间距：2px/70 ≈ 0.0286（随格缩放） */
-  --rune-border-width: 2px;       /* 边框粗细 */
-  --rune-border: #B08D57;         /* 边框颜色：白底推荐 #C0C4CC（浅）/ #909399（深） */
+  --rune-gap: calc(var(--rune-cell) * 0.0286); /* 符文间距 */
+
   flex: 1;
   min-height: 78px;
   overflow-y: auto;
@@ -330,146 +296,17 @@ onMounted(() => {
 }
 
 .rune-item {
-  container-type: inline-size;
   position: relative;
-  aspect-ratio: 1 / 1;
   box-sizing: border-box;
-  border: var(--rune-border-width) solid var(--rune-border);
   cursor: pointer;
 }
 .rune-item.selected {
-  outline: 2px solid #409eff;
-  outline-offset: -1px;
   z-index: 1;
 }
-/* 符文图：居中（top 为垂直位置，可调；1号槽下面单独补偿）。
-   宽高 = 格宽（比例 1），改 --rune-cell 时图片随格缩放 */
-.rune-item-img {
-  --img-top: 43%;          /* 中心图垂直位置：改这里统一调所有槽位 */
-  position: absolute;
-  left: 50%;
-  top: var(--img-top);
-  transform: translate(-50%, -50%);
-  width: 98.1%;
-  height: 98.1%;
-  object-fit: contain;
-  pointer-events: none;
-}
-/* 1号三角形符文：原图图案在画布内偏高约7%框高（可见区垂直中心≈0.42~0.44，其余槽位0.50），
-   → 单独下移对齐。若调整上面 --img-top，请同步把这里改成 (--img-top + 7%) */
-.rune-item-img.is-slot-1 {
-  --img-top: 50%;
-}
-/* 无图占位 */
-.rune-item-ph {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #909399;
-  font-size: 16px;
-}
-/* 星级：统一到 Equipped 基准进行等比例换算 */
-.rune-item-star {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 2.1%;
-  height: 27.5%;
-  max-width: 93%;
-  object-fit: contain;
-  pointer-events: none;
-}
-/* 7星调整：单独抬升，使7/6星视觉同一高度 */
-.rune-item-star.is-7star {
-  bottom: 4.2%;
-}
-/* 等级数字 +N：以星条实际高度为唯一基准推导 */
-.rune-item-lv {
-  --star-h: calc(var(--rune-cell) * 0.26);   /* 兜底：不支持容器查询时按名义格宽 */
-  --star-h: 27.5cqw;                         /* 支持时按真实格宽 */
-  position: absolute;
-  left: calc(var(--star-h) * 0.3297);   /* = 0.0857 x 格宽（0.05 + 2.5/70），与 Equipped / 对比栏一致 */
-  bottom: calc(var(--star-h) * 0.808);
-  z-index: 2;
-  font-size: calc(var(--star-h) * 0.769);
-  line-height: calc(var(--star-h) * 0.923);
-  font-weight: 500;
-  color: #fff;
-  pointer-events: none;
-  --lv-o: calc(var(--star-h) * 0.055);
-  --lv-s: calc(var(--star-h) * 0.115);
-  text-shadow:
-    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
-}
-/* 右侧详情面板上方符文框：参照左侧 runeList 的比例 */
-.detail-rune-box {
-  --detail-cell: 110px;         /* 框边长（基准，改这里整体缩放右侧面板） */
-  --rune-border-width: 2px;
-  --rune-border: #C0C4CC;
-  box-sizing: border-box;       /* 与左侧 .rune-item 一致：宽含边框 */
-  position: relative;
-  width: var(--detail-cell);
-  height: var(--detail-cell);
-  margin: 0 auto;
-  border: var(--rune-border-width) solid var(--rune-border);
-  border-radius: 0; /* 尖角方形 */
-}
-/* 符文图 */
-.detail-rune-img {
-  --img-top: 43%;            /* 中心图垂直位置：与左侧 .rune-item-img 相同 */
-  --img-scale: 0.925;        /* 图占框比例：与 Equipped 统一 */
-  position: absolute;
-  left: 50%;
-  top: var(--img-top);
-  transform: translate(-50%, -50%);
-  width: calc(var(--detail-cell) * var(--img-scale));
-  height: calc(var(--detail-cell) * var(--img-scale));
-  object-fit: contain;
-}
-/* 1号三角形符文：与左侧 .rune-item-img.is-slot-1 一致（下移 7% 对齐） */
-.detail-rune-img.is-slot-1 {
-  --img-top: 50%;
-}
-/* 星星：统一到 Equipped 基准 */
-.detail-rune-star {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--detail-cell) * 0.02);
-  height: calc(var(--detail-cell) * 0.26);
-  max-width: calc(var(--detail-cell) * 0.88);
-  object-fit: contain;
-}
-/* 右侧 7 星：单独抬升 */
-.detail-rune-star.is-7star {
-  bottom: calc(var(--detail-cell) * 0.04);
-}
-/* 等级数字 +N：以星条为唯一基准推导 */
-.detail-rune-lv {
-  --star-h: calc(var(--detail-cell) * 0.26);
-  position: absolute;
-  left: calc(var(--star-h) * 0.3297);
-  bottom: calc(var(--star-h) * 0.808);
-  z-index: 2;
-  font-size: calc(var(--star-h) * 0.769);
-  line-height: calc(var(--star-h) * 0.923);
-  font-weight: 500;
-  color: #fff;
-  pointer-events: none;
-  --lv-o: calc(var(--star-h) * 0.055);
-  --lv-s: calc(var(--star-h) * 0.115);
-  text-shadow:
-    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
+/* 选中描边处于上层，避免被覆盖 */
+.rune-item.selected :deep(.rv-frame) {
+  outline: 2px solid #409eff;
+  outline-offset: -1px;
 }
 
 /* 空结果提示：横跨整行 */

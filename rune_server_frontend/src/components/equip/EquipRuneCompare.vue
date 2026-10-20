@@ -5,10 +5,10 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
+import { getSetEffect } from '@/utils/constants'
 import type { Rune } from '../runeStats.ts'
 import { fmtStat, normalSubStatsOf, extraStatOf, statLabel } from '../runeStats.ts'
-import RuneLockIcon from '../rune/RuneLockIcon.vue'
+import RuneVisual from '../rune/RuneVisual.vue'
 import RuneLockChange from '../rune/RuneLockChange.vue'
 
 const props = withDefaults(
@@ -113,12 +113,6 @@ const sides = computed<Side[]>(() => [
 
 const detailPx = computed(() => `${MAX_CELL * 1.5}px`)
 
-function bgOf(rune: Rune | null): string {
-  return (rune && RUNE_QUALITY_COLORS[rune.quality]) || '#2a1b10'
-}
-function starSrc(rune: Rune): string {
-  return `/runes/star/rune_star_0${rune.starRating}.png`
-}
 // 额外属性补齐：没有时显示「—」占位
 function padExtra(n: number): number[] {
   return Array.from({ length: Math.max(0, props.maxExtra - n) })
@@ -144,22 +138,14 @@ function onAct(side: Side) {
 
       <!-- ===== 有符文：完整信息 ===== -->
       <div v-if="s.rune" class="cmp-body">
-        <div class="cmp-rune" :class="`slot-${s.rune.slotNumber}`" :style="{ background: bgOf(s.rune) }">
-          <img class="rimg" :src="s.rune.imageUrl || `/runes/slot/rune_slot_010${s.rune.slotNumber}.png`" alt="" />
-          <img class="rstar" :class="{ is7: s.rune.starRating === 7 }" :src="starSrc(s.rune)" alt="" />
-          <!-- 占用龙头像 -->
-          <span
-            v-if="s.ownerName"
-            class="rune-owner"
-            :title="`已装备在「${s.ownerName}」身上${s.ownerStealable ? '，装备后将自动从它身上拆下' : ''}`"
-          >
-            <img v-if="s.ownerImage" :src="s.ownerImage" alt="" />
-            <span v-else class="rune-owner-ph">{{ s.ownerName.slice(0, 1) }}</span>
-          </span>
-          <!-- 等级角标 -->
-          <span v-if="s.rune.levels != null" class="rlv">+{{ s.rune.levels }}</span>
-          <!-- 锁定状态图标 -->
-          <RuneLockIcon :locked="!!s.rune.locked" />
+        <div class="cmp-rune">
+          <RuneVisual
+            :rune="s.rune"
+            :slot="s.rune.slotNumber"
+            :size="detailPx"
+            :owner="s.ownerName ? { name: s.ownerName, avatar: s.ownerImage } : null"
+            :owner-stealable="s.ownerStealable"
+          />
         </div>
 
         <div class="cmp-info">
@@ -308,17 +294,14 @@ function onAct(side: Side) {
 /* 详情区符文框 */
 .cmp-rune {
   --detail: v-bind(detailPx);
-  --rlb-base: var(--detail);   /* 锁图标组件以此为准 */
   position: relative;
   width: var(--detail);
   height: var(--detail);
-  border: 2px solid #c0c4cc;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 .cmp-rune.empty {
-  border-style: dashed;
-  border-color: #dcdfe6;
+  border: 2px dashed #dcdfe6;
   background: #f5f7fa;
   display: flex;
   align-items: center;
@@ -328,85 +311,6 @@ function onAct(side: Side) {
   color: #c0c4cc;
   font-size: 13px;
   letter-spacing: 2px;
-}
-.cmp-rune .rimg {
-  position: absolute;
-  left: 50%;
-  top: 43%;
-  transform: translate(-50%, -50%);
-  width: calc(var(--detail) * 0.925);
-  height: calc(var(--detail) * 0.925);
-  object-fit: contain;
-}
-.cmp-rune.slot-1 .rimg {
-  top: 50%;
-}
-.cmp-rune .rstar {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--detail) * 0.02);
-  height: calc(var(--detail) * 0.26);
-  max-width: calc(var(--detail) * 0.88);
-  object-fit: contain;
-}
-.cmp-rune .rstar.is7 {
-  bottom: calc(var(--detail) * 0.04);
-}
-/* 等级角标 */
-.cmp-rune .rlv {
-  position: absolute;
-  /* 与 EquipRuneCell 的 .rt-lv 同一比例 */
-  left: calc(var(--detail) * 0.0857);
-  bottom: calc(var(--detail) * 0.210);   /* 2026-10-14 定稿：原 0.193 */
-  z-index: 2;
-  font-size: calc(var(--detail) * 0.2);
-  line-height: calc(var(--detail) * 0.24);
-  font-weight: 500;
-  color: #fff;
-  pointer-events: none;
-  --lv-o: calc(var(--detail) * 0.0143);
-  --lv-s: calc(var(--detail) * 0.03);
-  text-shadow:
-    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
-    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
-    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
-}
-
-.cmp-rune .rune-owner {
-  position: absolute;
-  /* 头像间隔基准 */
-  right: calc(var(--detail) / 105);
-  top: calc(var(--detail) / 105);
-  /* 头像大小 */
-  width: calc(var(--detail) * 0.3);
-  height: calc(var(--detail) * 0.3);
-  overflow: hidden;
-  /* 边框配色 */
-  border: 1px solid #b08d57;
-  border-radius: 2px;
-  background: #2a1b10;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-}
-.cmp-rune .rune-owner img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-/* 龙没有立绘时的兜底：名字首字 */
-.cmp-rune .rune-owner-ph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background: #909399;
-  color: #fff;
-  font-size: calc(var(--detail) * 0.13);
-  line-height: 1;
 }
 
 /* 名称 / 副标题 */
@@ -466,9 +370,7 @@ function onAct(side: Side) {
   visibility: hidden;
 }
 
-/* 锁按钮行：右对齐。42/7/11 按【前端口径】配平（.stat-line 只有 padding 1px 0、无 margin-bottom）；
-   与原型 index.html 的 37/17/11 不同 —— 那边 .stat-line 是 padding 5px 10px + margin-bottom 1px。
-   右 7px = .cmp-info 横向无内边距(0) + 菱形外伸 7px，使右尖端与词条文字右缘对齐。 */
+/* 锁按钮行 */
 .lock-row {
   display: flex;
   justify-content: flex-end;

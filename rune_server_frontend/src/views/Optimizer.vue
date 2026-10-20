@@ -245,7 +245,7 @@ function setChipText(set: any): string {
 // 是否把其他龙已装备的符文也纳入候选池（关闭=仅闲置符文 + 当前龙已装备）
 const includeOthersEquipped = ref(false)
 
-// 推荐符文若已装备在别的龙身上，返回 {name, avatar} 供左下角头像角标展示
+// 推荐符文若已装备在别的龙身上，返回 {name, avatar} 供右上角头像角标展示
 function runeOwner(rune: any): { name: string; avatar: string | null } | null {
   if (!rune?.equippedDragonId || rune.equippedDragonId === selectedDragonId.value) return null
   const d = allDragons.value.find(d => d.dragonId === rune.equippedDragonId)
