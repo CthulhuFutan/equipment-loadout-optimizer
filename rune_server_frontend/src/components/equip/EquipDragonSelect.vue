@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { DRAGON_CATEGORIES, DRAGON_ELEMENTS } from '@/utils/constants'
-import type { Dragon } from './runeStats'
+import type { Dragon } from '../runeStats.ts'
 
 const props = withDefaults(
   defineProps<{

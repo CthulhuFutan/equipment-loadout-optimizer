@@ -6,10 +6,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
-import type { Rune } from './runeStats'
-import { fmtNum, fmtStat, normalSubStatsOf, extraStatOf, statLabel } from './runeStats'
-import RuneLockBadge from './RuneLockBadge.vue'
-import RuneLock from './RuneLock.vue'
+import type { Rune } from '../runeStats.ts'
+import { fmtStat, normalSubStatsOf, extraStatOf, statLabel } from '../runeStats.ts'
+import RuneLockIcon from '../rune/RuneLockIcon.vue'
+import RuneLockChange from '../rune/RuneLockChange.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -159,7 +159,7 @@ function onAct(side: Side) {
           <!-- 等级角标 -->
           <span v-if="s.rune.levels != null" class="rlv">+{{ s.rune.levels }}</span>
           <!-- 锁定状态图标 -->
-          <RuneLockBadge :locked="!!s.rune.locked" />
+          <RuneLockIcon :locked="!!s.rune.locked" />
         </div>
 
         <div class="cmp-info">
@@ -203,7 +203,7 @@ function onAct(side: Side) {
 
           <!-- 符文锁定按钮 -->
           <div class="lock-row">
-            <RuneLock :locked="!!s.rune.locked" @toggle="emit('toggle-lock', s.rune.runeId)" />
+            <RuneLockChange :locked="!!s.rune.locked" @toggle="emit('toggle-lock', s.rune.runeId)" />
           </div>
           <div class="set-line">
             <div class="sn">{{ s.rune.setType }} {{ getSetEffect(s.rune.setType).count }}套组</div>
@@ -227,7 +227,7 @@ function onAct(side: Side) {
             <div v-for="i in maxSub" :key="`gs${i}`" class="stat-line"><span class="k">—</span><span class="v"></span></div>
           </div>
           <!-- 幽灵锁按钮行：与填充卡同高，保证左右两卡的套组效果停在同一高度 -->
-          <div class="lock-row"><RuneLock disabled style="visibility: hidden" /></div>
+          <div class="lock-row"><RuneLockChange disabled style="visibility: hidden" /></div>
           <div class="set-line"><div class="sn">无套组</div><div class="sd"></div></div>
         </div>
       </div>
@@ -334,8 +334,8 @@ function onAct(side: Side) {
   left: 50%;
   top: 43%;
   transform: translate(-50%, -50%);
-  width: calc(var(--detail) * 0.925 - 3px);
-  height: calc(var(--detail) * 0.925 - 3px);
+  width: calc(var(--detail) * 0.925);
+  height: calc(var(--detail) * 0.925);
   object-fit: contain;
 }
 .cmp-rune.slot-1 .rimg {
@@ -356,7 +356,8 @@ function onAct(side: Side) {
 /* 等级角标 */
 .cmp-rune .rlv {
   position: absolute;
-  left: calc(var(--detail) * 0.05);
+  /* 与 EquipRuneCell 的 .rt-lv 同一比例 */
+  left: calc(var(--detail) * 0.0857);
   bottom: calc(var(--detail) * 0.210);   /* 2026-10-14 定稿：原 0.193 */
   z-index: 2;
   font-size: calc(var(--detail) * 0.2);
@@ -376,13 +377,17 @@ function onAct(side: Side) {
 
 .cmp-rune .rune-owner {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: calc(var(--detail) * 0.26);
-  height: calc(var(--detail) * 0.26);
+  /* 头像间隔基准 */
+  right: calc(var(--detail) / 105);
+  top: calc(var(--detail) / 105);
+  /* 头像大小 */
+  width: calc(var(--detail) * 0.3);
+  height: calc(var(--detail) * 0.3);
   overflow: hidden;
-  border-left: 1px solid #fff;
-  border-bottom: 1px solid #fff;
+  /* 边框配色 */
+  border: 1px solid #b08d57;
+  border-radius: 2px;
+  background: #2a1b10;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
 }
 .cmp-rune .rune-owner img {

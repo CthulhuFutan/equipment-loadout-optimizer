@@ -5,8 +5,8 @@ import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRunes, deleteRune, setRuneLock } from '@/api/rune'
 import { RUNE_SET_TYPES, STAT_TYPES, RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
-import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
-import RuneLock from '@/components/equip/RuneLock.vue'
+import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
+import RuneLockChange from '@/components/rune/RuneLockChange.vue'
 
 const router = useRouter()
 
@@ -193,8 +193,10 @@ onMounted(() => {
               <div v-else class="rune-item-ph">?</div>
               <img :src="starSrc(rune.starRating)" class="rune-item-star"
                    :class="{ 'is-7star': rune.starRating === 7 }" />
+              <!-- 等级数字 -->
+              <span v-if="rune.levels != null" class="rune-item-lv">+{{ rune.levels }}</span>
               <!-- 锁定状态图标：List列表 -->
-              <RuneLockBadge :locked="!!rune.locked" />
+              <RuneLockIcon :locked="!!rune.locked" />
             </div>
             <div v-if="filteredRunes.length === 0 && !loading" class="rune-empty">没有匹配的符文</div>
           </div>
@@ -219,8 +221,10 @@ onMounted(() => {
                  :class="{ 'is-slot-1': selectedRune.slotNumber === 1 }" />
             <img :src="starSrc(selectedRune.starRating)" class="detail-rune-star"
                  :class="{ 'is-7star': selectedRune.starRating === 7 }" />
+            <!-- 等级数字 -->
+            <span v-if="selectedRune.levels != null" class="detail-rune-lv">+{{ selectedRune.levels }}</span>
             <!-- 锁定状态图标 -->
-            <RuneLockBadge :locked="!!selectedRune.locked" base="var(--detail-cell)" />
+            <RuneLockIcon :locked="!!selectedRune.locked" base="var(--detail-cell)" />
           </div>
           <div style="font-size:18px;font-weight:bold;margin-top:8px">
             {{ selectedRune.runeName || selectedRune.setType }}{{ selectedRune.slotNumber }}号符文
@@ -276,7 +280,7 @@ onMounted(() => {
 
         <!-- 符文锁定按钮：符文详情 -->
         <div class="rlk-row">
-          <RuneLock :locked="!!selectedRune.locked" @toggle="onToggleLock" />
+          <RuneLockChange :locked="!!selectedRune.locked" @toggle="onToggleLock" />
         </div>
 
         <!-- 套组效果 -->
@@ -324,9 +328,9 @@ onMounted(() => {
   align-items: start;
   box-sizing: border-box;
 }
-/* 方格：方形 + 银白细框；浏览器变窄时列数自动减少、格体不缩小。
-   每行格数 ≈ ⌊(容器宽 + 间隙) ÷ (格宽 + 间隙)⌋ */
+
 .rune-item {
+  container-type: inline-size;
   position: relative;
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
@@ -346,8 +350,8 @@ onMounted(() => {
   left: 50%;
   top: var(--img-top);
   transform: translate(-50%, -50%);
-  width: calc(var(--rune-cell));
-  height: calc(var(--rune-cell));
+  width: 98.1%;
+  height: 98.1%;
   object-fit: contain;
   pointer-events: none;
 }
@@ -366,28 +370,44 @@ onMounted(() => {
   color: #909399;
   font-size: 16px;
 }
-/* 星级：以格宽为基准的比例值。bottom 锚定格底 → 格体大小变化时星星位置稳定（不漂移）；
-   height=7 星大小、max-width=1~6 星大小（星条宽高比 5.64，宽度先撞 max-width）。
-   比例：bottom 1px→×0.0143、height 20px→×0.2857、max-width 67px→×0.9571（相对 70px 格） */
+/* 星级：统一到 Equipped 基准进行等比例换算 */
 .rune-item-star {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--rune-cell) * 0.0143);
-  height: calc(var(--rune-cell) * 0.2857);
-  max-width: calc(var(--rune-cell) * 0.9571);
+  bottom: 2.1%;
+  height: 27.5%;
+  max-width: 93%;
   object-fit: contain;
   pointer-events: none;
 }
-/* 7星星星：竖块(56×36)比6星长条(124×22)高 → 单独抬升，使7/6星视觉同一高度
-   （bottom 2px → ×0.0286） */
+/* 7星调整：单独抬升，使7/6星视觉同一高度 */
 .rune-item-star.is-7star {
-  bottom: calc(var(--rune-cell) * 0.0286);
+  bottom: 4.2%;
 }
-/* 右侧详情面板上方符文框：参照左侧 runeList 的比例。
-   基准 = 自身框尺寸 --detail-cell（110px）。注意：左侧符文图在格内四周有间隙
-   （格子被 grid 1fr 拉伸 > 图宽），故右侧图也保留间隙、不填满框。
-   边框 --rune-border-width / --rune-border 与符文格共用（固定 2px） */
+/* 等级数字 +N：以星条实际高度为唯一基准推导 */
+.rune-item-lv {
+  --star-h: calc(var(--rune-cell) * 0.26);   /* 兜底：不支持容器查询时按名义格宽 */
+  --star-h: 27.5cqw;                         /* 支持时按真实格宽 */
+  position: absolute;
+  left: calc(var(--star-h) * 0.3297);   /* = 0.0857 x 格宽（0.05 + 2.5/70），与 Equipped / 对比栏一致 */
+  bottom: calc(var(--star-h) * 0.808);
+  z-index: 2;
+  font-size: calc(var(--star-h) * 0.769);
+  line-height: calc(var(--star-h) * 0.923);
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  --lv-o: calc(var(--star-h) * 0.055);
+  --lv-s: calc(var(--star-h) * 0.115);
+  text-shadow:
+    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
+}
+/* 右侧详情面板上方符文框：参照左侧 runeList 的比例 */
 .detail-rune-box {
   --detail-cell: 110px;         /* 框边长（基准，改这里整体缩放右侧面板） */
   --rune-border-width: 2px;
@@ -400,14 +420,10 @@ onMounted(() => {
   border: var(--rune-border-width) solid var(--rune-border);
   border-radius: 0; /* 尖角方形 */
 }
-/* 符文图：img 元素尺寸可调。图案实际显示大小 = 框宽 × --img-scale × 图案在源图占比。
-   你测量第7个符文图案占格 39/78 = 50%，若想让图案正好占框 50%（四边各 1/4），
-   --img-scale 应≈1.0（因图案在 70px 源图内约占 50%，img 需接近框宽）。
-   觉得偏大就调小 --img-scale（如 0.7 → 图案约 35%），偏小就调大。
-   垂直位置 --img-top 与左侧一致（43%，图案略偏上：上方留白<下方）。 */
+/* 符文图 */
 .detail-rune-img {
   --img-top: 43%;            /* 中心图垂直位置：与左侧 .rune-item-img 相同 */
-  --img-scale: 0.9;          /* 图占框比例（可调：0.5 小 / 0.8 中 / 1.0 大） */
+  --img-scale: 0.925;        /* 图占框比例：与 Equipped 统一 */
   position: absolute;
   left: 50%;
   top: var(--img-top);
@@ -420,23 +436,40 @@ onMounted(() => {
 .detail-rune-img.is-slot-1 {
   --img-top: 50%;
 }
-/* 星星：与图片一样用可调系数 --star-scale（默认 1.0 = 与左侧等比例）。
-   基准比例（相对 110px 框）：height 20px/70.875≈0.282、max-width 67px/70.875≈0.9454、
-   bottom 1px/70.875≈0.0141。调大 --star-scale 星星整体放大，调小缩小。
-   height=7星、max-width=1~6星（星条宽高比 5.64，宽度先撞 max-width）。 */
+/* 星星：统一到 Equipped 基准 */
 .detail-rune-star {
-  --star-scale: 0.855;       /* 星星大小系数（0.95 × 0.9 ≈ 当前大小的 0.9 倍） */
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--detail-cell) * 0.03);   /* 1.55px + 上移 1px ≈ 2.55px */
-  height: calc(var(--detail-cell) * 0.282 * var(--star-scale));
-  max-width: calc(var(--detail-cell) * 0.9454 * var(--star-scale));
+  bottom: calc(var(--detail-cell) * 0.02);
+  height: calc(var(--detail-cell) * 0.26);
+  max-width: calc(var(--detail-cell) * 0.88);
   object-fit: contain;
 }
-/* 右侧 7 星：与中间一致，单独抬升（2px/70.875 ≈ 0.0282） */
+/* 右侧 7 星：单独抬升 */
 .detail-rune-star.is-7star {
-  bottom: calc(var(--detail-cell) * 0.0282);
+  bottom: calc(var(--detail-cell) * 0.04);
+}
+/* 等级数字 +N：以星条为唯一基准推导 */
+.detail-rune-lv {
+  --star-h: calc(var(--detail-cell) * 0.26);
+  position: absolute;
+  left: calc(var(--star-h) * 0.3297);
+  bottom: calc(var(--star-h) * 0.808);
+  z-index: 2;
+  font-size: calc(var(--star-h) * 0.769);
+  line-height: calc(var(--star-h) * 0.923);
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  --lv-o: calc(var(--star-h) * 0.055);
+  --lv-s: calc(var(--star-h) * 0.115);
+  text-shadow:
+    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
 
 /* 空结果提示：横跨整行 */

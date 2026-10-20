@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS } from '@/utils/constants'
-import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
+import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
 
 const props = withDefaults(defineProps<{
   /** 槽位上的符文，null/undefined 表示空槽 */
@@ -74,8 +74,10 @@ const tooltipText = computed(() => {
       <img :src="slotImage(rune, slot)" class="slot-img" />
       <img v-if="rune" :src="starSrc(rune.starRating)" class="slot-star"
            :class="{ 'is-7star': rune.starRating === 7 }" />
+      <!-- 等级数字 -->
+      <span v-if="rune && rune.levels != null" class="slot-lv" :class="{ 'has-owner': !!owner }">+{{ rune.levels }}</span>
       <!-- 锁定状态图标 -->
-      <RuneLockBadge :locked="!!rune?.locked" base="var(--slot)" />
+      <RuneLockIcon :locked="!!rune?.locked" base="var(--slot)" />
       <!-- 占龙头像角标（该符文已装备在别的龙身上） -->
       <span v-if="owner" class="owner-badge" :title="`已装备在「${owner.name}」身上`">
         <img v-if="owner.avatar" :src="owner.avatar" />
@@ -124,21 +126,46 @@ const tooltipText = computed(() => {
   top: 50%;
 }
 
-/* 星级：对齐 DragonDetail——bottom 锚定框底；height=7星、max-width=1~6星。
-   比例：bottom ×0.0143、height ×0.2857、max-width ×0.9571，再统一 ×0.925 与符文图同缩放 */
+/* 星级：统一到 Equipped（EquipRuneCell .rt-star）基准 */
 .slot-star {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--slot) * 0.0143);
-  height: calc(var(--slot) * 0.2857 * 0.925);
-  max-width: calc(var(--slot) * 0.9571 * 0.925);
+  bottom: calc(var(--slot) * 0.02);
+  height: calc(var(--slot) * 0.26);
+  max-width: calc(var(--slot) * 0.88);
   object-fit: contain;
   pointer-events: none;
 }
-/* 7星星星：竖块比6星高 → 单独抬升（×0.0286） */
+/* 7星星星：单独抬升 */
 .rune-slot:not(.is-empty) .slot-star.is-7star {
-  bottom: calc(var(--slot) * 0.0286);
+  bottom: calc(var(--slot) * 0.04);
+}
+
+/* 等级数字 +N */
+.slot-lv {
+  --star-h: calc(var(--slot) * 0.26);
+  position: absolute;
+  left: calc(var(--star-h) * 0.3297);   /* = 0.0857 x 格宽（0.05 + 2.5/70），与 Equipped / 对比栏一致 */
+  bottom: calc(var(--star-h) * 0.808);
+  z-index: 2;
+  font-size: calc(var(--star-h) * 0.769);
+  line-height: calc(var(--star-h) * 0.923);
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  --lv-o: calc(var(--star-h) * 0.055);
+  --lv-s: calc(var(--star-h) * 0.115);
+  text-shadow:
+    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
+}
+/* 有占龙头像时整体上移 */
+.slot-lv.has-owner {
+  bottom: calc(var(--star-h) * 0.808 + 20px);
 }
 
 /* 占龙头像角标：左下角圆角方形小头像 */

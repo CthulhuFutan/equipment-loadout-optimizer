@@ -1,8 +1,8 @@
 <!-- 符文详情抽屉 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants'
-import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
+import { RUNE_QUALITY_COLORS, getSetEffect } from '@/utils/constants.ts'
+import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -67,8 +67,10 @@ function slotBackground(rune: any): string {
                :class="{ 'is-slot-1': rune.slotNumber === 1 }" />
           <img :src="starSrc(rune.starRating)" class="drawer-rune-star"
                :class="{ 'is-7star': rune.starRating === 7 }" />
+          <!-- 等级数字 -->
+          <span v-if="rune.levels != null" class="drawer-rune-lv">+{{ rune.levels }}</span>
           <!-- 锁定状态图标 -->
-          <RuneLockBadge :locked="!!rune.locked" base="var(--dr-box)" />
+          <RuneLockIcon :locked="!!rune.locked" base="var(--dr-box)" />
         </div>
         <div style="font-size:18px;font-weight:bold;margin-top:8px">
           {{ rune.runeName || rune.setType }}{{ rune.slotNumber }}号符文
@@ -167,8 +169,8 @@ function slotBackground(rune: any): string {
   left: 50%;
   top: 43%;
   transform: translate(-50%, -50%);
-  width: calc(var(--dr-box) * 0.9);
-  height: calc(var(--dr-box) * 0.9);
+  width: calc(var(--dr-box) * 0.925);
+  height: calc(var(--dr-box) * 0.925);
   object-fit: contain;
 }
 /* 1号三角形符文：原图图案偏高约7% → 下移对齐 */
@@ -180,15 +182,37 @@ function slotBackground(rune: any): string {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--dr-box) * 0.0232);
-  height: calc(var(--dr-box) * 0.2411);
-  max-width: calc(var(--dr-box) * 0.8083);
+  /* 统一到 Equipped（EquipRuneCell .rt-star）基准 */
+  bottom: calc(var(--dr-box) * 0.02);
+  height: calc(var(--dr-box) * 0.26);
+  max-width: calc(var(--dr-box) * 0.88);
   object-fit: contain;
 }
 
-/* 7星符文标识：竖块比6星高 → 单独抬升 */
+/* 7星符文标识：单独抬升 */
 .drawer-rune-star.is-7star {
-  bottom: calc(var(--dr-box) * 0.0282);
+  bottom: calc(var(--dr-box) * 0.04);
+}
+/* 等级数字 +N */
+.drawer-rune-lv {
+  --star-h: calc(var(--dr-box) * 0.26);
+  position: absolute;
+  left: calc(var(--star-h) * 0.3297);
+  bottom: calc(var(--star-h) * 0.808);
+  z-index: 2;
+  font-size: calc(var(--star-h) * 0.769);
+  line-height: calc(var(--star-h) * 0.923);
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  --lv-o: calc(var(--star-h) * 0.055);
+  --lv-s: calc(var(--star-h) * 0.115);
+  text-shadow:
+    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
 .score-box {
   border: 1px solid #e6a23c;

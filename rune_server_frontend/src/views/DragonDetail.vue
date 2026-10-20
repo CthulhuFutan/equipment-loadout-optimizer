@@ -9,8 +9,8 @@ import {
 } from '@/utils/constants.ts'
 import {getDragon, getDragonEquipment} from "@/api/dragon.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
-import RuneDetailDrawer from '@/components/RuneDetailDrawer.vue'
-import RuneLockBadge from '@/components/equip/RuneLockBadge.vue'
+import RuneDetailDrawer from '@/components/rune/RuneDetailDrawer.vue'
+import RuneLockIcon from '@/components/rune/RuneLockIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -183,8 +183,10 @@ onMounted(() => {
             <img :src="slotImage(slotRunes[slot], slot)" class="slot-img" />
             <img v-if="slotRunes[slot]" :src="starSrc(slotRunes[slot].starRating)" class="slot-star"
                  :class="{ 'is-7star': slotRunes[slot].starRating === 7 }" />
+            <!-- 等级数字 -->
+            <span v-if="slotRunes[slot] && slotRunes[slot].levels != null" class="slot-lv">+{{ slotRunes[slot].levels }}</span>
             <!-- 锁定状态图标 -->
-            <RuneLockBadge :locked="!!slotRunes[slot]?.locked" base="var(--slot)" />
+            <RuneLockIcon :locked="!!slotRunes[slot]?.locked" base="var(--slot)" />
           </div>
         </div>
       </div>
@@ -453,14 +455,37 @@ onMounted(() => {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--slot) * 0.0143);
-  height: calc(var(--slot) * 0.2857 * 0.925);
-  max-width: calc(var(--slot) * 0.9571 * 0.925);
+  /* 统一到 Equipped（EquipRuneCell .rt-star）基准 */
+  bottom: calc(var(--slot) * 0.02);
+  height: calc(var(--slot) * 0.26);
+  max-width: calc(var(--slot) * 0.88);
   object-fit: contain;
   pointer-events: none;
 }
 .rune-slot:not(.is-empty) .slot-star.is-7star {
-  bottom: calc(var(--slot) * 0.0286);
+  bottom: calc(var(--slot) * 0.04);
+}
+
+/* 等级数字 +N */
+.slot-lv {
+  --star-h: calc(var(--slot) * 0.26);
+  position: absolute;
+  left: calc(var(--star-h) * 0.3297);
+  bottom: calc(var(--star-h) * 0.808);
+  z-index: 2;
+  font-size: calc(var(--star-h) * 0.769);
+  line-height: calc(var(--star-h) * 0.923);
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  --lv-o: calc(var(--star-h) * 0.055);
+  --lv-s: calc(var(--star-h) * 0.115);
+  text-shadow:
+    calc(-1 * var(--lv-o)) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) calc(-1 * var(--lv-o)) 0 rgba(0, 0, 0, 0.9),
+    calc(-1 * var(--lv-o)) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    var(--lv-o) var(--lv-o) 0 rgba(0, 0, 0, 0.9),
+    0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
 
 .rune-slot .corner {

@@ -4,8 +4,8 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DeltaRow, SetDeltaRow, SetLine, StatLine } from './runeStats'
-import { fmtNum } from './runeStats'
+import type { DeltaRow, SetDeltaRow, SetLine, StatLine } from '../runeStats.ts'
+import { fmtNum } from '../runeStats.ts'
 
 const props = withDefaults(
   defineProps<{

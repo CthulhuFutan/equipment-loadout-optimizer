@@ -13,10 +13,10 @@ import { ElMessage } from 'element-plus'
 import { getDragons, saveDragonEquipment } from '@/api/dragon'
 import { getRunes, setRuneLock } from '@/api/rune'
 import { RUNE_SET_TYPES, STAT_TYPES } from '@/utils/constants'
-import RuneTile from '@/components/equip/RuneTile.vue'
-import RuneComparePanel from '@/components/equip/RuneComparePanel.vue'
-import BuildSummaryPanel from '@/components/equip/BuildSummaryPanel.vue'
-import DragonPickerDialog from '@/components/equip/DragonPickerDialog.vue'
+import EquipRuneCell from '@/components/equip/EquipRuneCell.vue'
+import EquipRuneCompare from '@/components/equip/EquipRuneCompare.vue'
+import EquipDataChangeAndSum from '@/components/equip/EquipDataChangeAndSum.vue'
+import EquipDragonSelect from '@/components/equip/EquipDragonSelect.vue'
 import {
   aggregate,
   buildLoadoutMap,
@@ -28,8 +28,8 @@ import {
   statDelta,
   statLabel,
   fmtStat,
-} from '@/components/equip/runeStats'
-import type { Dragon, Loadout, Rune } from '@/components/equip/runeStats'
+} from '@/components/runeStats.ts'
+import type { Dragon, Loadout, Rune } from '@/components/runeStats.ts'
 
 const SLOTS = [1, 2, 3, 4, 5, 6]
 
@@ -323,7 +323,7 @@ onMounted(load)
             :title="filtering ? `${n} 号槽位 · 匹配 ${slotCounts[i] ?? 0} 件` : `${n} 号槽位 · 持有 ${slotCounts[i] ?? 0} 件`"
             @click="selectSlot(n)"
           >
-            <RuneTile
+            <EquipRuneCell
               :rune="runeMap.get(equippedIdAt(curLoadout, n) ?? -1) ?? null"
               :slot="n"
             />
@@ -370,7 +370,7 @@ onMounted(load)
             @click="candidateId = r.runeId"
             @dblclick="quickEquip(r.runeId)"
           >
-            <RuneTile
+            <EquipRuneCell
               :rune="r"
               :slot="r.slotNumber"
               :highlight="
@@ -393,7 +393,7 @@ onMounted(load)
       <!-- ===== 当前装备 / 候选符文 对比 ===== -->
       <div class="col-cand panel">
         <div class="panel-head"><h3>{{ curSlot }} 号槽位</h3></div>
-        <RuneComparePanel
+        <EquipRuneCompare
           :equipped-rune="equippedRune"
           :candidate-rune="candidateRune"
           :same-as-equipped="sameAsEquipped"
@@ -411,7 +411,7 @@ onMounted(load)
       </div>
 
       <!-- ===== 属性变化 → 属性总和 ===== -->
-      <BuildSummaryPanel
+      <EquipDataChangeAndSum
         :delta-rows="deltaRows"
         :delta-sets="deltaSets"
         :hint="deltaHint"
@@ -422,7 +422,7 @@ onMounted(load)
       />
     </div>
 
-    <DragonPickerDialog
+    <EquipDragonSelect
       v-model="pickerVisible"
       :dragons="dragons"
       :equipped-count="equippedCount"

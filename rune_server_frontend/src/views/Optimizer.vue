@@ -16,8 +16,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { DRAGON_CATEGORIES, DRAGON_ELEMENTS, STAT_TYPES, STAT_DISPLAY_ORDER, getSetEffect } from '@/utils/constants'
 import { getDragonEquipment, getDragons, saveDragonEquipment } from '@/api/dragon'
 import {getInit, optimize, optimizeScene} from '@/api/optimize'
-import RuneSlot from '@/components/RuneSlot.vue'
-import RuneDetailDrawer from '@/components/RuneDetailDrawer.vue'
+import OptimizerRuneSlot from '@/components/OptimizerRuneSlot.vue'
+import RuneDetailDrawer from '@/components/rune/RuneDetailDrawer.vue'
 
 const route = useRoute()
 
@@ -444,7 +444,7 @@ onMounted(async () => {
           </span>
         </div>
         <div class="slot-row">
-          <RuneSlot v-for="n in 6" :key="n" :rune="equipmentMap[n]" :slot="n"
+          <OptimizerRuneSlot v-for="n in 6" :key="n" :rune="equipmentMap[n]" :slot="n"
                     @click="openDrawer(equipmentMap[n])" />
         </div>
 
@@ -481,7 +481,7 @@ onMounted(async () => {
           </span>
         </div>
         <div class="slot-row">
-          <RuneSlot v-for="n in 6" :key="n" :rune="recMap[n]?.rune" :slot="n"
+          <OptimizerRuneSlot v-for="n in 6" :key="n" :rune="recMap[n]?.rune" :slot="n"
                     :owner="runeOwner(recMap[n]?.rune)"
                     @click="openDrawer(recMap[n]?.rune, recMap[n]?.score)" />
         </div>
@@ -516,7 +516,7 @@ onMounted(async () => {
           </span>
         </div>
         <div class="slot-row">
-          <RuneSlot v-for="n in 6" :key="n" :rune="grindMap[n]?.rune" :slot="n"
+          <OptimizerRuneSlot v-for="n in 6" :key="n" :rune="grindMap[n]?.rune" :slot="n"
                     :owner="runeOwner(grindMap[n]?.rune)"
                     @click="openDrawer(grindMap[n]?.rune, grindMap[n]?.score, grindMap[n]?.potentialScore, grindMap[n]?.grind)" />
         </div>

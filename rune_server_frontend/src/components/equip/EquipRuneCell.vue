@@ -2,8 +2,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RUNE_QUALITY_COLORS } from '@/utils/constants'
-import type { Rune } from './runeStats'
-import RuneLockBadge from './RuneLockBadge.vue'
+import type { Rune } from '../runeStats.ts'
+import RuneLockIcon from '../rune/RuneLockIcon.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -77,7 +77,7 @@ const starSrc = computed(() =>
         +{{ rune.levels }}
       </span>
       <!-- 锁定状态图标 -->
-      <RuneLockBadge :locked="!!rune?.locked" />
+      <RuneLockIcon :locked="!!rune?.locked" />
     </div>
     <slot />
   </div>
@@ -143,8 +143,8 @@ const starSrc = computed(() =>
 /* ---- 等级角标：左下角、紧贴星标之上。6星 与 7星 存在一定差距，需要微调 ---- */
 .rt-lv {
   position: absolute;
-  left: calc(var(--rune-cell, 70px) * 0.05);
-  bottom: calc(var(--rune-cell, 70px) * 0.210);   /* 2026-10-14 定稿：原 0.193 */
+  left: calc(var(--rune-cell, 70px) * 0.0857);
+  bottom: calc(var(--rune-cell, 70px) * 0.210);
   z-index: 2;
   font-size: calc(var(--rune-cell, 70px) * 0.2);
   line-height: calc(var(--rune-cell, 70px) * 0.24);
@@ -161,17 +161,17 @@ const starSrc = computed(() =>
     0 0 var(--lv-s) rgba(0, 0, 0, 0.45);
 }
 
-
-/* ---- 符文装备对应龙头像：尖角矩形、紧贴右上边缘 ---- */
+/* 符文装备对应头像 */
 .rt-owner {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: calc(var(--rune-cell, 70px) * 0.26);
-  height: calc(var(--rune-cell, 70px) * 0.26);
+  right: calc(var(--rune-cell, 70px) / 105);
+  top: calc(var(--rune-cell, 70px) / 105);
+  width: calc(var(--rune-cell, 70px) * 0.3);
+  height: calc(var(--rune-cell, 70px) * 0.3);
   overflow: hidden;
-  border-left: 1px solid #fff;
-  border-bottom: 1px solid #fff;
+  border: 1px solid #b08d57;
+  border-radius: 2px;
+  background: #2a1b10;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
@@ -181,7 +181,7 @@ const starSrc = computed(() =>
   object-fit: cover;
   display: block;
 }
-/* 龙没有立绘时的兜底：显示名字首字（与 RuneSlot.vue 的 owner-ph 同做法） */
+/* 龙没有立绘时的兜底：显示名字首字 */
 .rt-owner-ph {
   display: flex;
   align-items: center;

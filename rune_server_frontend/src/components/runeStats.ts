@@ -1,5 +1,5 @@
 /* 装备调整页相关计算 */
-import { SET_EFFECTS, STAT_DISPLAY_ORDER } from '@/utils/constants'
+import { SET_EFFECTS, STAT_DISPLAY_ORDER } from '@/utils/constants.ts'
 
 export interface RuneSubStat {
   statType: string
