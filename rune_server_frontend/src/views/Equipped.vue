@@ -17,6 +17,7 @@ import EquipRuneCell from '@/components/equip/EquipRuneCell.vue'
 import EquipRuneCompare from '@/components/equip/EquipRuneCompare.vue'
 import EquipDataChangeAndSum from '@/components/equip/EquipDataChangeAndSum.vue'
 import EquipDragonSelect from '@/components/equip/EquipDragonSelect.vue'
+import RuneIconSelect from '@/components/rune/RuneIconSelect.vue'
 import {
   aggregate,
   buildLoadoutMap,
@@ -78,21 +79,25 @@ const barDragons = computed(() =>
   dragons.value.filter((d) => equippedCount(d.dragonId) > 0 || d.dragonId === curDragonId.value),
 )
 
-const filterSet = ref('')
+const ALL_SET = '__all__'
+const filterSet = ref(ALL_SET)
 const filterMain = ref('')
 const filterSub = ref('')
 // 默认可以查看已装备符文
 const showEquipped = ref(true)
 
-const setOptions = RUNE_SET_TYPES.map((s) => s.value)
+const setOptions = [
+  { label: '全部', value: ALL_SET },
+  ...RUNE_SET_TYPES.map((s) => ({ label: s.label, value: s.value, icon: s.image })),
+]
 const statOptions = STAT_TYPES.map((s) => s.value)
 
 const filtering = computed(
-  () => (filterSet.value || filterMain.value || filterSub.value || !showEquipped.value),
+  () => (filterSet.value !== ALL_SET || filterMain.value || filterSub.value || !showEquipped.value),
 )
 
 function runeMatches(r: Rune): boolean {
-  if (filterSet.value && r.setType !== filterSet.value) return false
+  if (filterSet.value !== ALL_SET && r.setType !== filterSet.value) return false
   if (filterMain.value && r.mainStatType !== filterMain.value) return false
   if (filterSub.value && !(r.subStats ?? []).some((s) => s.statType === filterSub.value)) return false
   if (!showEquipped.value && r.equipped) return false
@@ -335,10 +340,18 @@ onMounted(load)
 
         <div class="filter-row">
           <label>套组</label>
-          <select v-model="filterSet" @change="onFilterChange">
-            <option value="">全部</option>
-            <option v-for="s in setOptions" :key="s" :value="s">{{ s }}</option>
-          </select>
+          <RuneIconSelect
+            v-model="filterSet"
+            :options="setOptions"
+            :width="118"
+            :height="32"
+            :selected-icon-size="25"
+            :option-icon-size="25"
+            :selected-gap="5"
+            :option-gap="5"
+            :icon-offset-y="2"
+            @update:model-value="onFilterChange"
+          />
 
           <label>主属性</label>
           <select v-model="filterMain" @change="onFilterChange">

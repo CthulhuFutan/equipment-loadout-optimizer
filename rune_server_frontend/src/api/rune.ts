@@ -12,6 +12,10 @@ export function createRune(data: any) {
     return api.post('/runes', data)
 }
 
+export function updateRune(id: number, data: any) {
+    return api.put(`/runes/${id}`, data)
+}
+
 export function deleteRune(id: number) {
     return api.delete(`/runes/${id}`)
 }

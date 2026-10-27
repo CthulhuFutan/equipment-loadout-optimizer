@@ -4,7 +4,7 @@
   · 不负责：tooltip、hover 放大、点击、选中/高亮描边、对比卡与抽屉的布局
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RUNE_QUALITY_COLORS } from '@/utils/constants.ts'
 import type { Rune } from '../runeStats.ts'
 import RuneLockIcon from './RuneLockIcon.vue'
@@ -25,8 +25,12 @@ const props = withDefaults(
     ownerStealable?: boolean
     /* 符文图相对外框的比例 */
     imgScale?: number
+    /* 覆盖符文图 top */
+    imgTop?: string
     /* 空槽占位图相对外框的比例 */
     emptyScale?: number
+    /* 仅 RuneForm 预览启用：主图失败显示「?」，星条/锁失败隐藏 */
+    fallback?: boolean
   }>(),
   {
     rune: null,
@@ -40,6 +44,7 @@ const props = withDefaults(
     ownerStealable: false,
     imgScale: 0.925,
     emptyScale: 0.925,
+    fallback: false,
   },
 )
 
@@ -50,9 +55,15 @@ const rv = computed(() => (typeof props.size === 'number' ? `${props.size}px` : 
 const imgSrc = computed(
   () => props.rune?.imageUrl || `/runes/slot/rune_slot_010${props.slot}.png`,
 )
+const imgFailed = ref(false)
+watch(imgSrc, () => { imgFailed.value = false })
 const starSrc = computed(() =>
   props.rune ? `/runes/star/rune_star_0${props.rune.starRating}.png` : '',
 )
+const starFailed = ref(false)
+watch(starSrc, () => { starFailed.value = false })
+function onImgError() { if (props.fallback) imgFailed.value = true }
+function onStarError() { if (props.fallback) starFailed.value = true }
 const bg = computed(
   () => (props.rune && RUNE_QUALITY_COLORS[props.rune.quality]) || '#2a1b10',
 )
@@ -68,29 +79,38 @@ const ownerTitle = computed(() => {
   <div class="rv-host" :class="{ 'is-fluid': fluid }" :style="{ '--rv': rv }">
     <div
       class="rv-frame"
-      :class="{ 'is-empty': isEmpty, 'is-slot-1': slot === 1 }"
+      :class="{ 'is-empty': isEmpty, 'is-slot-1': slot === 1, 'has-star': showStar && !!rune && !starFailed, 'is-7star': rune?.starRating === 7 }"
       :style="{
         background: bg,
         '--rv-img-scale': isEmpty ? emptyScale : imgScale,
       }"
     >
-      <!-- 符文图 / 空槽占位图 -->
-      <img class="rv-img" :src="imgSrc" alt="" />
+      <!-- 符文图 / 空槽占位图；主图缺图时在正中显示 ? -->
+      <img
+        v-if="!imgFailed"
+        class="rv-img"
+        :src="imgSrc"
+        :style="imgTop ? { top: imgTop } : undefined"
+        alt=""
+        @error="onImgError"
+      />
+      <span v-else class="rv-art-ph" aria-hidden="true">?</span>
 
       <!-- 星条 -->
       <img
-        v-if="showStar && rune"
+        v-if="showStar && rune && !starFailed"
         class="rv-star"
         :class="{ 'is-7star': rune.starRating === 7 }"
         :src="starSrc"
         alt=""
+        @error="onStarError"
       />
 
-      <!-- 等级数字（+N） -->
-      <span v-if="showLevel && rune && rune.levels != null" class="rv-lv">+{{ rune.levels }}</span>
+      <!-- 等级数字（+N）；等级 0 不显示 -->
+      <span v-if="showLevel && rune && rune.levels != null && rune.levels > 0" class="rv-lv">+{{ rune.levels }}</span>
 
       <!-- 锁状态图标 -->
-      <RuneLockIcon v-if="showLock" :locked="!!rune?.locked" />
+      <RuneLockIcon v-if="showLock" :locked="!!rune?.locked" :hide-on-error="fallback" />
 
       <!-- 空槽四角 -->
       <template v-if="corners && isEmpty">
@@ -155,6 +175,29 @@ const ownerTitle = computed(() => {
 .rv-frame.is-slot-1 .rv-img {
   top: 50%;
 }
+
+/* 主图 404：在品质底正中显示 ? */
+.rv-art-ph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, .55);
+  font-size: calc(var(--rv) * 0.2);
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  pointer-events: none;
+  /* ? 相对中点再下移 */
+  transform: translateY(calc(var(--rv) * 0.01));
+}
+/* 6/7 星相对位置差异 */
+.rv-frame.has-star .rv-art-ph { height: calc(100% - var(--rv) * 0.28); }
+.rv-frame.has-star.is-7star .rv-art-ph { height: calc(100% - var(--rv) * 0.30); }
 
 /* ===== 星条：height 决定 7 星、max-width 决定 1~6 星 ===== */
 .rv-star {

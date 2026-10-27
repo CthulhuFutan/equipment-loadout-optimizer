@@ -53,6 +53,11 @@ const router = createRouter({
           name: 'RuneNew',
           component: () => import('../views/RuneForm.vue'),
         },
+        {
+          path: 'runes/:id/edit',
+          name: 'RuneEdit',
+          component: () => import('../views/RuneForm.vue'),
+        },
 
         // runeEquipment
         {

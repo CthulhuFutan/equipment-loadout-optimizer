@@ -18,6 +18,7 @@ import { getDragonEquipment, getDragons, saveDragonEquipment } from '@/api/drago
 import {getInit, optimize, optimizeScene} from '@/api/optimize'
 import OptimizerRuneSlot from '@/components/OptimizerRuneSlot.vue'
 import RuneDetailDrawer from '@/components/rune/RuneDetailDrawer.vue'
+import RuneIconSelect from '@/components/rune/RuneIconSelect.vue'
 
 const route = useRoute()
 
@@ -25,6 +26,8 @@ const route = useRoute()
 const searchName = ref('')
 const filterElement = ref('')
 const filterCategory = ref('')
+const elementFilterOptions = DRAGON_ELEMENTS.map((e) => ({ label: e.label, value: e.value, icon: e.image }))
+const categoryFilterOptions = DRAGON_CATEGORIES.map((c) => ({ label: c.label, value: c.value, icon: c.image }))
 let timer: ReturnType<typeof setTimeout> | null = null
 const loadingDragon = ref(false)
 const dragons = ref<any[]>([])
@@ -171,7 +174,7 @@ const grindAdvices = computed(() =>
 // ================= 属性总和 + 套组效果 =================
 // 汇总一个构建（6 槽符文）：按词条类型求和（主属性 + 额外 + 副属性），并统计各套组件数
 // 属性总和的固定展示顺序索引（constants.STAT_DISPLAY_ORDER）
-const STAT_ORDER_INDEX = new Map(STAT_DISPLAY_ORDER.map((t, i) => [t, i]))
+const STAT_ORDER_INDEX = new Map<string, number>(STAT_DISPLAY_ORDER.map((t, i) => [t, i] as [string, number]))
 function aggregateBuild(runes: any[]): { stats: { label: string; base: number; total: number; setBonus: number; isPercent: boolean }[]; sets: any[] } {
   const statSum: Record<string, number> = {}
   const setCount: Record<string, number> = {}
@@ -383,18 +386,30 @@ onMounted(async () => {
     <!-- ===== 筛选栏 ===== -->
     <div style="display:flex;gap:12px;margin-bottom:16px">
       <el-input v-model="searchName" placeholder="搜索龙的名称" clearable style="width:260px" />
-      <el-select v-model="filterElement" placeholder="属性筛选" clearable style="width:150px">
-        <el-option v-for="e in DRAGON_ELEMENTS" :key="e.value" :label="e.label" :value="e.value">
-          <img :src="e.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px" />
-          <span>{{ e.label }}</span>
-        </el-option>
-      </el-select>
-      <el-select v-model="filterCategory" placeholder="类别筛选" clearable style="width:150px">
-        <el-option v-for="c in DRAGON_CATEGORIES" :key="c.value" :label="c.label" :value="c.value">
-          <img :src="c.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px" />
-          <span>{{ c.label }}</span>
-        </el-option>
-      </el-select>
+      <RuneIconSelect
+        v-model="filterElement"
+        :options="elementFilterOptions"
+        placeholder="属性筛选"
+        clearable
+        :width="150"
+        :height="32"
+        :selected-icon-size="20"
+        :option-icon-size="20"
+        :selected-gap="6"
+        :option-gap="6"
+      />
+      <RuneIconSelect
+        v-model="filterCategory"
+        :options="categoryFilterOptions"
+        placeholder="类别筛选"
+        clearable
+        :width="150"
+        :height="32"
+        :selected-icon-size="20"
+        :option-icon-size="20"
+        :selected-gap="6"
+        :option-gap="6"
+      />
       <span style="color:#909399;line-height:32px">共 {{ dragons.length }} 条</span>
     </div>
 

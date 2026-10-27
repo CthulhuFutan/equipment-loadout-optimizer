@@ -36,6 +36,7 @@ public class Runes {
     @TableField(insertStrategy = FieldStrategy.NEVER, updateStrategy = FieldStrategy.NEVER)
     private Boolean isGrindable;
     // 被研磨词条的 sortOrder（对应 rune_sub_stats.sort_order），null=未研磨
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Long grindSortOrder;
     // 符文锁定，不可被其他角色装备
     private Boolean locked;

@@ -54,6 +54,13 @@ public class GlobalExceptionHandler {
         return Result.error(Code.FILE_SIZE_EXCEED);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Result<?> handleIllegalArgument(IllegalArgumentException e){
+        log.warn("业务校验失败: {}", e.getMessage());
+        String msg = e.getMessage() == null ? "请求参数不合法" : e.getMessage();
+        return Result.error(400, msg);
+    }
+
     // 全局兜底
     @ExceptionHandler(Exception.class)
     public Result<?> handleException(Exception e){

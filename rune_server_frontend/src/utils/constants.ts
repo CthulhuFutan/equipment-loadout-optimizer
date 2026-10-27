@@ -48,18 +48,8 @@ export const LEADER_SKILLS = [
   { name: '无队长技能', icon: '/leader_skill/skill_empty.png', desc: '' },
 ] as const
 
-// ========== 符文 ==========
-export const RUNE_SLOTS = [
-    { label: '1号符文', value: 1 },
-    { label: '2号符文', value: 2 },
-    { label: '3号符文', value: 3 },
-    { label: '4号符文', value: 4 },
-    { label: '5号符文', value: 5 },
-    { label: '6号符文', value: 6 },
-] as const
-
 export const RUNE_SET_TYPES = [
-    { label: '活动', value: '活动', image: '/runes/special/01_sword.png' },
+    { label: '活动', value: '活动', image: '/runes/special/05_spear.png' },
     { label: '体力', value: '体力', image: '/runes/normal/01/01_yellow_07.png' },
     { label: '机会', value: '机会', image: '/runes/normal/01/01_purple_07.png' },
     { label: '坚固', value: '坚固', image: '/runes/normal/01/01_orange_07.png' },
@@ -121,10 +111,10 @@ export function parseRuneSetReqs(v: unknown): { setType: string; count: number }
 
 // 符文品质对应的背景渐变（取自 colored 星星：保留原星明暗渐变 + 品质色相/饱和度）
 export const RUNE_QUALITY_COLORS: Record<string, string> = {
-    '灰色': 'linear-gradient(180deg, #969696 0%, #303030 100%)',
+    '灰色': 'linear-gradient(135deg, #8E8E8E 0%, #6A6A6A 45%, #343434 100%)',
     '蓝色': 'linear-gradient(180deg, #5FA8E0 0%, #12298F 100%)',
-    '紫色': 'linear-gradient(180deg, #572A6D 0%, #3E1358 100%)',
-    '橙色': 'linear-gradient(180deg, #E0B042 0%, #84401D 100%)',
+    '紫色': 'radial-gradient(circle farthest-side at 100% 100%, #3A0C48 0%, #460E56 52%, #55106A 99.6%, rgba(85,16,106,0) 100%), linear-gradient(180deg, #6A1780 0%, #5E1374 55%, #541068 100%)',
+    '橙色': 'linear-gradient(135deg, #F2A03E 0%, #CB6E1F 45%, #8E4512 100%)',
 }
 
 export const STAT_TYPES = [

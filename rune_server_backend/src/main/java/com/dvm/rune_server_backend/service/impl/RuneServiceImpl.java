@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -120,9 +122,11 @@ public class RuneServiceImpl implements RuneService {
         if (dto.getMainStatType() != null && !RuneConstants.isMainStatAllowed(dto.getSlotNumber(), dto.getMainStatType())) {
             throw new IllegalArgumentException("槽位 " + dto.getSlotNumber() + " 不允许主属性: " + dto.getMainStatType());
         }
+        validateNormalStatUnique(null, dto);
         Runes rune = new Runes();
         BeanUtils.copyProperties(dto, rune);
         rune.setUserId(userId);
+        validateGrindTarget(null, dto);
         runeMapper.insert(rune);
 
         subInsert(rune, dto);
@@ -135,6 +139,7 @@ public class RuneServiceImpl implements RuneService {
         if (dto.getMainStatType() != null && !RuneConstants.isMainStatAllowed(dto.getSlotNumber(), dto.getMainStatType())) {
             throw new IllegalArgumentException(dto.getSlotNumber() + "号槽 " + " 不允许主属性: " + dto.getMainStatType());
         }
+        validateNormalStatUnique(runeId, dto);
         QueryWrapper<Runes> wrapper = new QueryWrapper<Runes>().eq("user_id", userId).eq("rune_id", runeId);
         if(runeMapper.selectOne(wrapper) == null){
             return 0;
@@ -143,6 +148,7 @@ public class RuneServiceImpl implements RuneService {
         BeanUtils.copyProperties(dto, rune);
         rune.setRuneId(runeId);
         rune.setUserId(userId);
+        validateGrindTarget(runeId, dto);
         runeMapper.updateById(rune);
 
         // 无子词条id号：先删后插
@@ -188,6 +194,77 @@ public class RuneServiceImpl implements RuneService {
                 sub.setRuneId(rune.getRuneId());
                 subStatsMapper.insert(sub);
             }
+        }
+    }
+
+    /**
+     * 普通符文：主词条、额外词条、副词条之间不允许同类型重复。
+     * 活动符文按游戏规则允许重复（例如多条致命率%），直接跳过。
+     */
+    private void validateNormalStatUnique(Long runeId, RuneRequest dto) {
+        if ("活动".equals(dto.getSetType())) return;
+
+        Set<String> seen = new HashSet<>();
+        if (dto.getMainStatType() != null && !seen.add(dto.getMainStatType())) {
+            throw new IllegalArgumentException("普通符文主词条重复: " + dto.getMainStatType());
+        }
+
+        List<RuneRequest.SubStatItem> items = dto.getSubStats();
+        if (items == null && runeId != null) {
+            items = subStatsMapper
+                    .selectList(new QueryWrapper<RuneSubStats>().eq("rune_id", runeId))
+                    .stream()
+                    .map(s -> {
+                        RuneRequest.SubStatItem it = new RuneRequest.SubStatItem();
+                        it.setStatType(s.getStatType());
+                        it.setStatValue(s.getStatValue());
+                        it.setSortOrder(s.getSortOrder());
+                        return it;
+                    })
+                    .toList();
+        }
+        if (items == null) return;
+
+        for (RuneRequest.SubStatItem item : items) {
+            String statType = item.getStatType();
+            if (statType != null && !seen.add(statType)) {
+                throw new IllegalArgumentException("普通符文词条不允许重复: " + statType);
+            }
+        }
+    }
+
+    /**
+     * 校验 grindSortOrder 是否指向合法词条：
+     *  1. null → 不研磨，直接放行
+     *  2. 非 null → 若为 1~4，命中副词条。否则非法
+     *  3. 额外词条 sortOrder = 0，不参与研磨
+     */
+    private void validateGrindTarget(Long runeId, RuneRequest dto) {
+        Long g = dto.getGrindSortOrder();
+        if (g == null) return;
+
+        List<RuneRequest.SubStatItem> items = dto.getSubStats();
+        if (items == null && runeId != null) {
+            items = subStatsMapper
+                    .selectList(new QueryWrapper<RuneSubStats>().eq("rune_id", runeId))
+                    .stream()
+                    .map(s -> {
+                        RuneRequest.SubStatItem it = new RuneRequest.SubStatItem();
+                        it.setStatType(s.getStatType());
+                        it.setStatValue(s.getStatValue());
+                        it.setSortOrder(s.getSortOrder());
+                        return it;
+                    })
+                    .toList();
+        }
+
+        boolean hit = items != null && items.stream().anyMatch(it ->
+                it.getSortOrder() != null &&
+                g.equals(it.getSortOrder().longValue()) &&
+                it.getSortOrder() >= 1 && it.getSortOrder() <= 4);
+
+        if (!hit) {
+            throw new IllegalArgumentException("研磨词条必须指向本次提交中的一条副词条");
         }
     }
 }

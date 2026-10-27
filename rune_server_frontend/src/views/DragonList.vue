@@ -6,6 +6,7 @@ import {useRouter} from 'vue-router'
 import {deleteDragon, getDragons, getDragonEquipment} from "@/api/dragon.ts";
 import {ElMessage} from "element-plus";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog.vue";
+import RuneIconSelect from "@/components/rune/RuneIconSelect.vue";
 
 const router = useRouter()
 // 计时器
@@ -17,6 +18,8 @@ const dragons = ref([])
 const searchName = ref('')
 const filterElement = ref('')
 const filterCategory = ref('')
+const elementFilterOptions = DRAGON_ELEMENTS.map((e) => ({ label: e.label, value: e.value, icon: e.image }))
+const categoryFilterOptions = DRAGON_CATEGORIES.map((c) => ({ label: c.label, value: c.value, icon: c.image }))
 const currentPage = ref(1)
 const pageSize = 20
 const total = ref(0)
@@ -120,32 +123,30 @@ onMounted(() => {
           style="width:260px"
           :prefix-icon="Search"
       />
-      <el-select v-model="filterElement" placeholder="属性筛选" clearable style="width:150px">
-        <template #prefix>
-          <img
-              v-if="filterElement"
-              :src="DRAGON_ELEMENTS.find(e => e.value === filterElement)?.image"
-              style="width:20px;height:20px;vertical-align:middle"
-          />
-        </template>
-        <el-option v-for="e in DRAGON_ELEMENTS" :key="e.value" :label="e.label" :value="e.value">
-          <img :src="e.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px"/>
-          <span>{{ e.label }}</span>
-        </el-option>
-      </el-select>
-      <el-select v-model="filterCategory" placeholder="类别筛选" clearable style="width:150px">
-        <template #prefix>
-          <img
-              v-if="filterCategory"
-              :src="DRAGON_CATEGORIES.find(c => c.value === filterCategory)?.image"
-              style="width:20px;height:20px;vertical-align:middle"
-          />
-        </template>
-        <el-option v-for="c in DRAGON_CATEGORIES" :key="c.value" :label="c.label" :value="c.value">
-          <img :src="c.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px"/>
-          <span>{{ c.label }}</span>
-        </el-option>
-      </el-select>
+      <RuneIconSelect
+        v-model="filterElement"
+        :options="elementFilterOptions"
+        placeholder="属性筛选"
+        clearable
+        :width="150"
+        :height="32"
+        :selected-icon-size="20"
+        :option-icon-size="20"
+        :selected-gap="6"
+        :option-gap="6"
+      />
+      <RuneIconSelect
+        v-model="filterCategory"
+        :options="categoryFilterOptions"
+        placeholder="类别筛选"
+        clearable
+        :width="150"
+        :height="32"
+        :selected-icon-size="20"
+        :option-icon-size="20"
+        :selected-gap="6"
+        :option-gap="6"
+      />
       <span style="color:#909399;line-height:32px">共 {{ total }} 条</span>
     </div>
 

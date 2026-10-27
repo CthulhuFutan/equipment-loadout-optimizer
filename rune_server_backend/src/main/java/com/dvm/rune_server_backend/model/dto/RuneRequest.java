@@ -43,6 +43,7 @@ public class RuneRequest {
 
     // 子属性列表
     @Valid
+    @Size(min = 1, max = 5, message = "词条数量超出限定范围")
     private List<SubStatItem> subStats;
 
     @Data

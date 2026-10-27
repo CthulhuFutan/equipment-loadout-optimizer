@@ -6,9 +6,14 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 import { DRAGON_CATEGORIES, DRAGON_ELEMENTS, LEADER_SKILLS, RUNE_SET_TIERS, RUNE_SET_REQ_ORDER, parseRuneSetReqs } from '@/utils/constants.ts'
 import { createDragon, getDragon, updateDragon } from "@/api/dragon.ts";
 import { imageUpload } from "@/api/upload.ts";
+import RuneIconSelect from '@/components/rune/RuneIconSelect.vue'
 
 const route = useRoute()
 const router = useRouter()
+
+const elementOptions = DRAGON_ELEMENTS.map((e) => ({ label: e.label, value: e.value, icon: e.image }))
+const categoryOptions = DRAGON_CATEGORIES.map((c) => ({ label: c.label, value: c.value, icon: c.image }))
+const leaderSkillOptions = LEADER_SKILLS.map((s, index) => ({ label: s.name, value: index, icon: s.icon }))
 
 // 有 id：编辑；没有 id：新建
 const dragonId = route.params.id ? Number(route.params.id) : null
@@ -282,24 +287,28 @@ onMounted(fetchDetail)
       <div class="dragon-info">
         <el-input v-model="form.dragonName" placeholder="输入龙名称" class="name-input" />
         <div class="selects-row">
-          <el-select v-model="form.element" placeholder="属性" style="width:160px" class="size-match">
-            <template #prefix>
-              <img v-if="form.element" :src="DRAGON_ELEMENTS.find(e => e.value === form.element)?.image" style="width:20px;height:20px;vertical-align:middle" />
-            </template>
-            <el-option v-for="e in DRAGON_ELEMENTS" :key="e.value" :label="e.label" :value="e.value">
-              <img :src="e.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px" />
-              <span>{{ e.label }}</span>
-            </el-option>
-          </el-select>
-          <el-select v-model="form.category" placeholder="类别" style="width:160px" class="size-match">
-            <template #prefix>
-              <img v-if="form.category" :src="DRAGON_CATEGORIES.find(c => c.value === form.category)?.image" style="width:20px;height:20px;vertical-align:middle" />
-            </template>
-            <el-option v-for="c in DRAGON_CATEGORIES" :key="c.value" :label="c.label" :value="c.value">
-              <img :src="c.image" style="width:22px;height:22px;vertical-align:middle;margin-right:6px" />
-              <span>{{ c.label }}</span>
-            </el-option>
-          </el-select>
+          <RuneIconSelect
+            v-model="form.element"
+            :options="elementOptions"
+            placeholder="属性"
+            :width="160"
+            :height="32"
+            :selected-icon-size="20"
+            :option-icon-size="20"
+            :selected-gap="6"
+            :option-gap="6"
+          />
+          <RuneIconSelect
+            v-model="form.category"
+            :options="categoryOptions"
+            placeholder="类别"
+            :width="160"
+            :height="32"
+            :selected-icon-size="20"
+            :option-icon-size="20"
+            :selected-gap="6"
+            :option-gap="6"
+          />
         </div>
       </div>
 
@@ -311,15 +320,18 @@ onMounted(fetchDetail)
     <!-- ===== 队长技能 ===== -->
     <h2 class="section-title">队长技能</h2>
     <div class="leader-row">
-      <el-select v-model="form.leaderSkillIndex" placeholder="选择队长技能" class="leader-select" @change="onLeaderSelect">
-        <template #prefix>
-          <img v-if="form.leaderSkillIcon" :src="form.leaderSkillIcon" style="width:26px;height:26px;vertical-align:middle" />
-        </template>
-        <el-option v-for="(s, index) in LEADER_SKILLS" :key="index" :label="s.name" :value="index">
-          <img :src="s.icon" style="width:28px;height:28px;vertical-align:middle;margin-right:8px" />
-          <span style="font-size:15px">{{ s.name }}</span>
-        </el-option>
-      </el-select>
+      <RuneIconSelect
+        v-model="form.leaderSkillIndex"
+        :options="leaderSkillOptions"
+        placeholder="选择队长技能"
+        :width="350"
+        :height="32"
+        :selected-icon-size="22"
+        :option-icon-size="22"
+        :selected-gap="6"
+        :option-gap="6"
+        @update:model-value="(v: string | number) => onLeaderSelect(Number(v))"
+      />
       <span v-if="form.leaderSkillDesc" class="leader-desc-inline">{{ form.leaderSkillDesc }}</span>
     </div>
 
@@ -374,7 +386,11 @@ onMounted(fetchDetail)
       <el-table-column label="图标" width="140" align="center">
         <template #default>
           <div class="table-icon-upload" @click="triggerUpload('treasure')">
-            <img v-if="previews.treasure || form.treasureIcon" :src="previews.treasure || form.treasureIcon" class="table-icon-img" />
+            <img
+                v-if="previews.treasure || form.treasureIcon"
+                :src="previews.treasure || form.treasureIcon || undefined"
+                class="table-icon-img"
+            />
             <div v-else class="table-icon-img placeholder">点击上传</div>
             <input :ref="el => fileInputs.treasure = el as HTMLInputElement" type="file" accept="image/*" hidden @change="onFileChange($event, 'treasure')" />
           </div>
@@ -470,9 +486,8 @@ onMounted(fetchDetail)
   margin-bottom: 15px;
 }
 
-/* 名称与选择框统一高度 */
-.name-input :deep(.el-input__wrapper),
-.size-match :deep(.el-input__wrapper) {
+/* 名称输入框高度 */
+.name-input :deep(.el-input__wrapper) {
   height: 40px;
 }
 
@@ -499,15 +514,6 @@ onMounted(fetchDetail)
 .leader-row {
   width: 350px;
   margin-bottom: 4px;
-}
-
-.leader-select {
-  width: 100%;
-  max-width: 350px;
-}
-
-.leader-select :deep(.el-input__wrapper) {
-  height: 37px;
 }
 
 .leader-desc-inline {

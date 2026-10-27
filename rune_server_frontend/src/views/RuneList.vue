@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete, Edit } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getRunes, deleteRune, setRuneLock } from '@/api/rune'
 import { RUNE_SET_TYPES, STAT_TYPES, getSetEffect } from '@/utils/constants'
 import RuneLockChange from '@/components/rune/RuneLockChange.vue'
 import RuneVisual from '@/components/rune/RuneVisual.vue'
+import RuneIconSelect from '@/components/rune/RuneIconSelect.vue'
 
 const router = useRouter()
 
@@ -14,6 +15,12 @@ const activeSlot = ref<number | null>(null)
 const filterSetType = ref('')
 const filterMainStatType = ref('')
 const filterEquipped = ref(true)
+
+const setFilterOptions = RUNE_SET_TYPES.map((t) => ({
+  label: t.label,
+  value: t.value,
+  icon: t.image,
+}))
 
 const allRunes = ref<any[]>([])
 const selectedRune = ref<any>(null)
@@ -155,12 +162,19 @@ onMounted(() => {
         <!-- 筛选行 + 符文图标 -->
         <div style="border:1px solid #dcdfe6;border-top:none;box-sizing:border-box">
           <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid #dcdfe6;flex-shrink:0">
-            <el-select v-model="filterSetType" placeholder="符文类型" clearable style="width:140px">
-              <el-option v-for="t in RUNE_SET_TYPES" :key="t.value" :label="t.label" :value="t.value">
-                <img :src="t.image" style="width:25px;height:25px;vertical-align:middle;margin-right:6px" />
-                <span>{{ t.label }}</span>
-              </el-option>
-            </el-select>
+            <RuneIconSelect
+              v-model="filterSetType"
+              :options="setFilterOptions"
+              placeholder="符文类型"
+              clearable
+              :width="140"
+              :height="32"
+              :selected-icon-size="25"
+              :option-icon-size="25"
+              :selected-gap="5"
+              :option-gap="5"
+              :icon-offset-y="2"
+            />
             <el-select v-model="filterMainStatType" placeholder="主属性" clearable style="width:140px">
               <el-option v-for="s in STAT_TYPES" :key="s.value" :label="s.label" :value="s.value" />
             </el-select>
@@ -261,8 +275,11 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- 删除按钮 -->
-        <div style="margin-top:20px;text-align:center">
+        <!-- 编辑 / 删除 -->
+        <div style="margin-top:20px;display:flex;justify-content:center;gap:8px">
+          <el-button :icon="Edit" @click="router.push({ name: 'RuneEdit', params: { id: selectedRune.runeId } })">
+            编辑
+          </el-button>
           <el-button type="danger" :icon="Delete" @click="removeRune">
             删除
           </el-button>
