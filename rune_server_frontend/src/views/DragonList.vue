@@ -109,7 +109,7 @@ onMounted(() => {
 <template>
   <div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h2>群龙汇聚</h2>
+      <h2>龙的列表</h2>
         <el-button type="primary" @click="router.push('/dragons/new')">
           <el-icon><Plus/></el-icon>添加龙
         </el-button>

@@ -168,7 +168,7 @@ public class AiServiceImpl implements AiService {
                 + String.join("、", RuneConstants.PERCENT_STATS) + "\n\n"
                 + "【输出格式（严格）】只输出一个 JSON 对象，禁止解释文字、禁止 markdown 围栏：\n"
                 + "以下【仅为格式示例，数值不代表分析结论】：\n"
-                + "{\"weights\":{\"攻击力%\":8,\"致命率%\":8,\"命中%\":7},\"rationale\":\"一句话说明\"}\n"
+                + "{\"weights\":{\"攻击力%\":8,\"致命率%\":8,\"致命伤害%\":7,\"命中%\":10},\"rationale\":\"一句话说明\"}\n"
                 + "要求：\n"
                 + "- weights：严格按【分析规则】根据当前龙的技能/类别/场景独立得出。\n"
                 + "  value 为 0-10 的整数，0=无关；与场景冲突时，场景优先。\n"

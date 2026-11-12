@@ -29,7 +29,7 @@ function defaultNormalSubs(star: number) {
 
 function defaultState(): RuneFormState {
   return {
-    slotNumber: 1, setType: '体力', quality: '橙色', starRating: 6, levels: 15, locked: false,
+    slotNumber: 1, setType: '冥想', quality: '橙色', starRating: 6, levels: 15, locked: false,
     runeName: '', actImage: '05_spear.png', mainType: '攻击力+', mainValue: 492, extra: null,
     subs: defaultNormalSubs(6),
     grind: -1,
@@ -385,7 +385,7 @@ function resolveImageUrl() {
 
 function applyRune(r: any) {
   form.slotNumber = Number(r.slotNumber) || 1
-  form.setType = String(r.setType || '体力')
+  form.setType = String(r.setType || '冥想')
   form.quality = String(r.quality || '橙色')
   form.starRating = Number(r.starRating) || 6
   form.levels = r.levels == null ? 0 : Number(r.levels)

@@ -6,7 +6,7 @@
     ② 词条权重滑块：默认取 getInit 返回的初始权重（AI 分析 / 类别基础权重）
     ③ 点击「应用」→ POST /optimize → 生成「推荐符文」「研磨搭配」两行
     ④ 研磨搭配行下方给出逐槽研磨建议明细
-    ⑤ 场景输入（AI）预留：后端场景接口开发中，按钮暂禁用
+    ⑤ 场景输入（AI）：调用后端 /optimize/scene 按当前场景重新分析权重
     ⑥「应用到龙」→ saveDragonEquipment 把推荐搭配写入当前龙
 -->
 <script setup lang="ts">
@@ -380,7 +380,7 @@ onMounted(async () => {
   <div class="optimizer-page">
     <!-- ===== 页面标题 ===== -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h2>龙与符的共鸣</h2>
+      <h2>符文分配器</h2>
     </div>
 
     <!-- ===== 筛选栏 ===== -->
@@ -566,7 +566,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- 场景输入（AI，后端开发中） -->
+      <!-- 场景输入（AI 场景权重分析） -->
       <div class="scene-panel">
         <div class="panel-head">
           <h3 class="panel-title">场景需求</h3>
